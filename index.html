@@ -3,167 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>数学建模与电子设计竞赛 · 比赛辅助与资料</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
-    background: #f5f5f3;
-    color: #2c2c2a;
-    line-height: 1.75;
-    padding: 56px 24px 64px;
-    -webkit-font-smoothing: antialiased;
-  }
-  .wrap { max-width: 780px; margin: 0 auto; }
-
-  .badge {
-    display: inline-block;
-    font-size: 12px;
-    letter-spacing: .04em;
-    color: #185FA5;
-    background: #E6F1FB;
-    border: 1px solid #B5D4F4;
-    border-radius: 999px;
-    padding: 3px 12px;
-    margin-bottom: 20px;
-  }
-
-  h1 {
-    font-size: 30px;
-    font-weight: 500;
-    line-height: 1.4;
-    letter-spacing: -.01em;
-    margin-bottom: 14px;
-  }
-
-  .lead {
-    font-size: 15px;
-    color: #5F5E5A;
-    margin-bottom: 40px;
-    max-width: 620px;
-  }
-
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-  .card {
-    background: #ffffff;
-    border: 1px solid #e6e5e0;
-    border-radius: 12px;
-    padding: 20px 22px;
-  }
-  .card .tag {
-    font-size: 12px;
-    color: #888780;
-    letter-spacing: .06em;
-    margin-bottom: 8px;
-  }
-  .card h2 {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: #2c2c2a;
-  }
-  .card p {
-    font-size: 13.5px;
-    color: #5F5E5A;
-  }
-
-  .panel {
-    background: #ffffff;
-    border: 1px solid #e6e5e0;
-    border-radius: 12px;
-    padding: 22px 24px;
-    margin-bottom: 32px;
-  }
-  .panel h3 {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 14px;
-    color: #2c2c2a;
-  }
-  .panel ul { list-style: none; }
-  .panel li {
-    font-size: 13.5px;
-    color: #5F5E5A;
-    padding: 7px 0 7px 20px;
-    position: relative;
-    border-bottom: 1px solid #f2f1ee;
-  }
-  .panel li:last-child { border-bottom: none; }
-  .panel li::before {
-    content: "";
-    position: absolute;
-    left: 3px;
-    top: 16px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #B4B2A9;
-  }
-  .panel li.done { color: #0F6E56; }
-  .panel li.done::before { background: #1D9E75; }
-  .panel li.todo { color: #888780; }
-
-  footer {
-    font-size: 12.5px;
-    color: #888780;
-    border-top: 1px solid #e6e5e0;
-    padding-top: 20px;
-  }
-  footer code {
-    font-family: "Cascadia Mono", Consolas, monospace;
-    font-size: 12px;
-    background: #f1efe8;
-    border-radius: 4px;
-    padding: 1px 5px;
-  }
-</style>
+<title>magic-hub · 数学建模与电子设计竞赛辅助平台</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="wrap">
 
-    <span class="badge">占位页 · Day 2</span>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">magic<span>-hub</span></a>
+      <nav class="topnav">
+        <a class="active" href="index.html">首页</a>
+      </nav>
+    </div>
+  </header>
 
-    <h1>数学建模与电子设计竞赛<br>比赛辅助与资料</h1>
+  <main class="wrap">
 
-    <p class="lead">
-      这是一个占位页。它的任务不是好看，而是证明「这个项目真的跑在互联网上」——
-      GitHub 仓库里能看到它，浏览器能打开它。真正的功能从第 7 周开始做。
+    <section class="hero">
+      <h1>数学建模 &amp; 电子设计<br>竞赛"保姆式"辅助平台</h1>
+      <p class="lead">
+        资料 → 分析 → 练习 → 复盘。为两类竞赛的备赛学生，
+        把散落的资料、评分标准和练习反馈收进一个网站，两个比赛完全分区。
+      </p>
+    </section>
+
+    <section class="zones" aria-label="分区入口">
+      <a class="zone-card" href="shumo/index.html">
+        <span class="zone-tag">分区一</span>
+        <h2>数学建模区</h2>
+        <p>
+          真题与优秀论文资料库、赛题 AI 分析、备赛 skill 下载。
+          本期内容重点深耕的分区。
+        </p>
+        <span class="zone-go">进入数模区 →</span>
+      </a>
+
+      <a class="zone-card" href="edian/index.html">
+        <span class="zone-tag">分区二</span>
+        <h2>电子设计区</h2>
+        <p>
+          往届国奖作品参考、器件与软件资源导航。
+          本期先搭好结构，内容后续逐步填充。
+        </p>
+        <span class="zone-go">进入电赛区 →</span>
+      </a>
+    </section>
+
+    <p class="notice">
+      网站建设中：资料库、资源导航、AI 赛题分析、Skill 下载等功能将陆续上线。
     </p>
 
-    <div class="cards">
-      <div class="card">
-        <p class="tag">板块一</p>
-        <h2>数学建模</h2>
-        <p>赛题拆解、常用模型清单、论文模板、数据预处理脚本。竞赛期间最耗时间的是"找不到上次写过的代码"，这里就是那个地方。</p>
-      </div>
-      <div class="card">
-        <p class="tag">板块二</p>
-        <h2>电子设计</h2>
-        <p>元器件选型笔记、常用电路模块、调试踩坑记录、EDA 工程文件索引。把每次焊完板子的经验留下来，而不是留在脑子里。</p>
-      </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      magic-hub · vibe coding 课程第 1 周作品 · 双分区结构，跨区请返回首页
     </div>
+  </footer>
 
-    <div class="panel">
-      <h3>项目进度</h3>
-      <ul>
-        <li class="done">Day 1 · 环境就绪（WorkBuddy / Git / Node.js / GitHub）</li>
-        <li class="done">Day 1 · 立项目规则（AGENTS.md）</li>
-        <li class="done">Day 2 · 忽略规则（.gitignore）</li>
-        <li class="done">Day 2 · 占位页 + 首次提交</li>
-        <li class="todo">Day 7 · 开始做 MVP 功能</li>
-      </ul>
-    </div>
-
-    <footer>
-      由 vibe coding 课程第 1 周搭建 · 单文件静态页面，无任何外部依赖 ·
-      本地路径 <code>D:\vibecoding\index.html</code>
-    </footer>
-
-  </div>
 </body>
 </html>

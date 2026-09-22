@@ -1,0 +1,9 @@
+{
+  "name": "magic-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "magic-hub —— 数学建模 & 电子设计竞赛保姆式辅助平台（第 1 周 MVP）",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
