@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="680" viewBox="0 0 960 680" font-family="-apple-system, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif">
+  <rect width="960" height="680" fill="#f5f5f3"/>
+
+  <!-- 标题 -->
+  <text x="40" y="56" font-size="26" font-weight="600" fill="#2c2c2a">magic-hub 项目结构</text>
+  <text x="40" y="84" font-size="13" fill="#888780">vibe coding 课程 · 第 1 周 Day 7 · 三页骨架 + 本地服务器 · 提交 c1feab2</text>
+
+  <!-- 根目录容器 -->
+  <rect x="40" y="108" width="880" height="448" rx="14" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="64" y="140" font-size="15" font-weight="600" fill="#2c2c2a">D:\vibecoding\　（Git 仓库根目录）</text>
+
+  <!-- ① 页面层 -->
+  <rect x="64" y="160" width="412" height="180" rx="10" fill="#fbfbf9" stroke="#e6e5e0"/>
+  <text x="80" y="186" font-size="13" font-weight="600" fill="#185fa5">① 页面层 · 浏览器直接看到的</text>
+
+  <rect x="80" y="200" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="92" y="222" font-size="12.5" fill="#2c2c2a">index.html　首页</text>
+  <rect x="282" y="200" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="294" y="222" font-size="12.5" fill="#2c2c2a">shumo/　数模区</text>
+
+  <rect x="80" y="244" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="92" y="266" font-size="12.5" fill="#2c2c2a">edian/　电赛区</text>
+  <rect x="282" y="244" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="294" y="266" font-size="12.5" fill="#2c2c2a">styles.css　全站样式</text>
+
+  <text x="80" y="306" font-size="12" fill="#888780">骨架链路：首页 → 两个分区 → 返回首页</text>
+
+  <!-- ② 服务层 -->
+  <rect x="488" y="160" width="408" height="180" rx="10" fill="#fbfbf9" stroke="#e6e5e0"/>
+  <text x="504" y="186" font-size="13" font-weight="600" fill="#185fa5">② 服务层 · 让页面在本地启动</text>
+
+  <rect x="504" y="200" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="516" y="222" font-size="12.5" fill="#2c2c2a">package.json　启动命令</text>
+  <rect x="706" y="200" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="718" y="222" font-size="12.5" fill="#2c2c2a">server.js　本地服务</text>
+
+  <rect x="504" y="244" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="516" y="266" font-size="12.5" fill="#2c2c2a">端口 3000</text>
+  <rect x="706" y="244" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="718" y="266" font-size="12.5" fill="#2c2c2a">零依赖，无需安装包</text>
+
+  <text x="504" y="306" font-size="12" fill="#888780">npm start → 浏览器打开 localhost:3000</text>
+
+  <!-- ③ 文档层 -->
+  <rect x="64" y="352" width="412" height="184" rx="10" fill="#fbfbf9" stroke="#e6e5e0"/>
+  <text x="80" y="378" font-size="13" font-weight="600" fill="#185fa5">③ 文档层 · 给人看 / 给 AI 看</text>
+
+  <rect x="80" y="388" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="92" y="410" font-size="12.5" fill="#2c2c2a">AGENTS.md　协作规则</text>
+  <rect x="282" y="388" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="294" y="410" font-size="12.5" fill="#2c2c2a">research.md　需求研究</text>
+
+  <rect x="80" y="428" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="92" y="450" font-size="12.5" fill="#2c2c2a">PRD.md　产品需求</text>
+  <rect x="282" y="428" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="294" y="450" font-size="12.5" fill="#2c2c2a">TECH_DESIGN.md　技术设计</text>
+
+  <rect x="80" y="468" width="186" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="92" y="490" font-size="12.5" fill="#2c2c2a">README.md　运行说明</text>
+
+  <text x="80" y="522" font-size="12" fill="#888780">仓库只存文字与代码，资料不散落桌面</text>
+
+  <!-- ④ 配置与安全 -->
+  <rect x="488" y="352" width="408" height="184" rx="10" fill="#fbfbf9" stroke="#e6e5e0"/>
+  <text x="504" y="378" font-size="13" font-weight="600" fill="#185fa5">④ 配置与安全</text>
+
+  <rect x="504" y="388" width="384" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="516" y="410" font-size="12.5" fill="#2c2c2a">.gitignore　忽略规则（.env / node_modules 全拦截）</text>
+
+  <rect x="504" y="428" width="384" height="34" rx="8" fill="#ffffff" stroke="#b5d4f4" stroke-dasharray="5 4"/>
+  <text x="516" y="450" font-size="12.5" fill="#5f5e5a">.env　本地密钥（Day 23 才创建，不进仓库）</text>
+
+  <rect x="504" y="468" width="384" height="34" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="516" y="490" font-size="12.5" fill="#2c2c2a">future: cloudfunctions/　云函数（Day 8 之后）</text>
+
+  <text x="504" y="522" font-size="12" fill="#888780">密钥永不写进代码与提交，只在云函数环境变量</text>
+
+  <!-- 底部：一次点击的完整路径 -->
+  <rect x="40" y="576" width="880" height="76" rx="14" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="64" y="620" font-size="13" font-weight="600" fill="#2c2c2a">点击一次会发生什么：</text>
+
+  <rect x="248" y="594" width="196" height="40" rx="8" fill="#e6f1fb" stroke="#b5d4f4"/>
+  <text x="262" y="619" font-size="12" fill="#185fa5">浏览器 localhost:3000</text>
+
+  <path d="M452 614 L468 614" stroke="#b4b2a9" stroke-width="1.5"/>
+  <path d="M468 609 L476 614 L468 619 Z" fill="#b4b2a9"/>
+
+  <rect x="484" y="594" width="176" height="40" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="498" y="619" font-size="12" fill="#2c2c2a">server.js 读取文件</text>
+
+  <path d="M668 614 L684 614" stroke="#b4b2a9" stroke-width="1.5"/>
+  <path d="M684 609 L692 614 L684 619 Z" fill="#b4b2a9"/>
+
+  <rect x="700" y="594" width="140" height="40" rx="8" fill="#ffffff" stroke="#e6e5e0"/>
+  <text x="714" y="619" font-size="12" fill="#2c2c2a">页面返回并渲染</text>
+
+  <text x="856" y="619" font-size="12" fill="#888780">全程本地</text>
+</svg>
