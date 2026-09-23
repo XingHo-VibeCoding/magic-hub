@@ -1,75 +1,104 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>数学建模区 · magic-hub</title>
-<link rel="stylesheet" href="../styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数学建模区 · magic-hub</title>
+  <meta name="description" content="数学建模备赛分区：真题与优秀论文资料库、AI 赛题分析、备赛 skill 下载。">
+  <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 
-  <header class="topbar">
+  <!-- 顶栏：同款交互，初始透明融进分区 Hero，下滑变白 -->
+  <header class="topbar" id="topbar">
     <div class="topbar-inner">
       <a class="brand" href="../index.html">magic<span>-hub</span></a>
-      <nav class="topnav">
-        <a href="../index.html">返回首页</a>
-        <a class="active" href="index.html">数学建模区</a>
+      <nav class="topnav" aria-label="主导航">
+        <a href="../index.html" class="topnav-link">首页</a>
+        <a href="index.html" class="topnav-link is-current">数学建模</a>
+        <a href="../edian/index.html" class="topnav-link">电子设计</a>
       </nav>
     </div>
   </header>
+
+  <!-- 分区 Hero：约半屏高，往下翻是本期功能 -->
+  <section class="hero sub-hero" id="hero">
+    <div class="hero-inner">
+      <p class="hero-tag">分区一 · MATH MODELING</p>
+      <h1 class="hero-title">数学建模区</h1>
+      <p class="hero-sub">
+        面向国赛 / 美赛 / 研赛的备赛分区：找真题与优秀论文、让 AI 帮你拆题、
+        下载备赛 skill。本期内容重点深耕这里。
+      </p>
+      <a class="btn-hero" href="#features" id="heroBtn">看看本期功能</a>
+    </div>
+  </section>
 
   <main class="wrap">
 
     <a class="back-link" href="../index.html">← 返回首页</a>
 
-    <section class="zone-head">
-      <span class="zone-tag">分区一 · 数模</span>
-      <h1>数学建模区</h1>
-      <p class="lead">
-        面向国赛 / 美赛 / 研赛的备赛分区：找真题与优秀论文、让 AI 帮你拆题、
-        下载备赛 skill。本期内容重点深耕这里。
+    <section id="features">
+      <h2 class="section-title">本期功能</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card off">
+          <span class="status">建设中 · 功能未接入</span>
+          <h3>资料库</h3>
+          <p>真题、优秀作品、评分标准、知识讲解，四个分类。</p>
+        </div>
+
+        <div class="feature-card off">
+          <span class="status">建设中 · 功能未接入</span>
+          <h3>资源导航</h3>
+          <p>建模软件、写作工具等官网链接，按用途分组。</p>
+        </div>
+
+        <div class="feature-card off">
+          <span class="status">建设中 · 功能未接入</span>
+          <h3>AI 赛题分析</h3>
+          <p>粘贴赛题，返回题目概述、解题方向与坑点提示。</p>
+        </div>
+
+        <div class="feature-card off">
+          <span class="status">建设中 · 功能未接入</span>
+          <h3>Skill 下载</h3>
+          <p>数模备赛 skill，附使用指引，可复制可下载。</p>
+        </div>
+      </div>
+
+      <p class="notice">
+        以上功能将按开发计划陆续上线；当前页面为分区骨架，先行确认导航与双区隔离。
       </p>
     </section>
 
-    <h2 class="section-title">本期功能</h2>
-
-    <div class="feature-grid">
-      <div class="feature-card off">
-        <span class="status">建设中 · 功能未接入</span>
-        <h3>资料库</h3>
-        <p>真题、优秀作品、评分标准、知识讲解，四个分类。</p>
-      </div>
-
-      <div class="feature-card off">
-        <span class="status">建设中 · 功能未接入</span>
-        <h3>资源导航</h3>
-        <p>建模软件、写作工具等官网链接，按用途分组。</p>
-      </div>
-
-      <div class="feature-card off">
-        <span class="status">建设中 · 功能未接入</span>
-        <h3>AI 赛题分析</h3>
-        <p>粘贴赛题，返回题目概述、解题方向与坑点提示。</p>
-      </div>
-
-      <div class="feature-card off">
-        <span class="status">建设中 · 功能未接入</span>
-        <h3>Skill 下载</h3>
-        <p>数模备赛 skill，附使用指引，可复制可下载。</p>
-      </div>
-    </div>
-
-    <p class="notice">
-      以上功能将按开发计划陆续上线；当前页面为分区骨架，先行确认导航与双区隔离。
-    </p>
-
   </main>
 
+  <!-- 深色页脚（与首页同款） -->
   <footer class="footer">
-    <div class="wrap">
-      magic-hub · 数学建模区 · 双分区结构，跨区请返回首页
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-logo">magic<span>-hub</span></p>
+        <p class="footer-note">数学建模区 · MVP 阶段（mock 数据版）</p>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">本区</p>
+        <a href="index.html">数学建模区首页</a>
+        <a href="../index.html">网站首页</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">说明</p>
+        <span>功能建设中，陆续上线</span>
+        <span>双区隔离，跨区经首页</span>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">文档</p>
+        <span>PRD · 技术设计见仓库</span>
+        <span>运行说明见 README.md</span>
+      </div>
     </div>
   </footer>
 
+  <script src="../app.js"></script>
 </body>
 </html>

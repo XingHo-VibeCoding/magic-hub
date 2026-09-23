@@ -3,21 +3,26 @@
    说明：
    - 所有页面共用这一份样式，改一处全站生效。
    - 颜色变量集中在 :root，后续页面想换主题色只改这里。
+   - 主色为紫光同创参考色系：主紫 #910782 / 辅紫 #82239A。
    ========================================================================== */
 
 :root {
-  --bg: #f5f5f3;          /* 页面底色 */
-  --surface: #ffffff;     /* 卡片/面板底色 */
-  --border: #e6e5e0;      /* 边框 */
-  --text: #2c2c2a;        /* 正文 */
-  --text-soft: #5f5e5a;   /* 次要文字 */
-  --text-mute: #888780;   /* 弱化文字 */
-  --accent: #185fa5;      /* 主色（链接/强调） */
-  --accent-soft: #e6f1fb; /* 主色浅底 */
+  --bg: #f7f6f9;             /* 页面底色 */
+  --surface: #ffffff;        /* 卡片/面板底色 */
+  --border: #e9e6ee;         /* 边框 */
+  --text: #221b28;           /* 正文 */
+  --text-soft: #5e5768;      /* 次要文字 */
+  --text-mute: #8f8a99;      /* 弱化文字 */
+  --accent: #910782;         /* 主紫 */
+  --accent-2: #82239A;       /* 辅紫 */
+  --accent-soft: #f7e9f5;    /* 主色浅底 */
   --radius: 12px;
+  --topbar-h: 60px;          /* 顶栏高度 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
@@ -27,108 +32,376 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ---------- 顶部导航（每页固定） ---------- */
+/* ==========================================================================
+   顶栏（每页固定）
+   首页 special：.topbar 默认透明融进 Hero，加 .solid 后变白底深字。
+   分区页没有 #topbar 这个 id，JS 不处理，恒为白底 —— 不受影响。
+   ========================================================================== */
 .topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: transparent;                    /* 初始：透明，与 Hero 融为一体 */
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+  transition: background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
 }
+/* 首页专属：滚动后变白（由 app.js 加/去 .solid） */
+.topbar.solid {
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 14px rgba(34, 27, 40, 0.07);
+}
+/* 分区页兜底：没有 Hero 可融，顶栏直接白底 */
+.topbar:not(#topbar) {
+  background: rgba(255,255,255,0.96);
+  border-bottom: 1px solid var(--border);
+}
+
 .topbar-inner {
-  max-width: 960px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 0 24px;
+  height: var(--topbar-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .brand {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;                             /* 顶栏在 Hero 上时是白字 */
   text-decoration: none;
   letter-spacing: -0.01em;
+  transition: color 0.35s ease;
 }
-.brand span { color: var(--accent); }
-.topnav { display: flex; gap: 20px; }
+.brand span { color: #ffffff; opacity: 0.85; transition: color 0.35s ease, opacity 0.35s ease; }
+.topbar.solid .brand { color: var(--text); }
+.topbar.solid .brand span { color: var(--accent); opacity: 1; }
+/* 分区页顶栏恒白底，品牌字恒深色 */
+.topbar:not(#topbar) .brand { color: var(--text); }
+.topbar:not(#topbar) .brand span { color: var(--accent); opacity: 1; }
+
+.topnav { display: flex; gap: 28px; }
 .topnav a {
+  position: relative;
   font-size: 14px;
-  color: var(--text-soft);
+  color: rgba(255,255,255,0.88);
   text-decoration: none;
-  padding: 2px 0;
+  padding: 4px 0;
+  transition: color 0.25s ease;
 }
-.topnav a:hover { color: var(--accent); }
-.topnav a.active { color: var(--accent); font-weight: 500; }
+/* 悬停：变主紫 + 下划线从中间向两边展开（仿参考站导航） */
+.topnav a::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -2px;
+  width: 0; height: 2px;
+  background: var(--accent);
+  transform: translateX(-50%);
+  transition: width 0.35s ease;
+}
+.topbar.solid .topnav a,
+.topbar:not(#topbar) .topnav a { color: var(--text-soft); }
+.topbar.solid .topnav a:hover,
+.topbar:not(#topbar) .topnav a:hover { color: var(--accent); }
+.topbar.solid .topnav a.is-current,
+.topbar:not(#topbar) .topnav a.is-current { color: var(--accent); font-weight: 600; }
+.topnav a:hover::after { width: 100%; }
 
-/* ---------- 主体 ---------- */
-.wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+/* ==========================================================================
+   首页 Hero：一屏高，紫黑渐变 + 代码画的"电路/数据"纹理
+   ========================================================================== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 65% at 78% 18%, rgba(130, 35, 154, 0.55), transparent 60%),
+    radial-gradient(ellipse 70% 55% at 12% 88%, rgba(145, 7, 130, 0.4), transparent 62%),
+    linear-gradient(148deg, #17091d 0%, #2a0b31 46%, #3d0f42 100%);
+}
+/* 纹理一：斜向"电路走线" */
+.hero::before {
+  content: "";
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 90px),
+    repeating-linear-gradient(25deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 130px);
+  pointer-events: none;
+}
+/* 纹理二：右下角数据点阵 */
+.hero::after {
+  content: "";
+  position: absolute; right: -40px; bottom: -40px;
+  width: 46%; height: 55%;
+  background-image: radial-gradient(rgba(255,255,255,0.16) 1.5px, transparent 1.5px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 72%);
+          mask-image: radial-gradient(ellipse at center, #000 30%, transparent 72%);
+  pointer-events: none;
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 96px 24px 64px;
+  width: 100%;
+}
+.hero-tag {
+  display: inline-block;
+  font-size: 12.5px;
+  letter-spacing: 0.22em;
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 999px;
+  padding: 4px 16px;
+  margin-bottom: 26px;
+  animation: fadeUp 0.9s ease both;
+}
+.hero-title {
+  font-size: clamp(34px, 5.4vw, 58px);
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
+  color: #ffffff;
+  margin-bottom: 18px;
+  animation: fadeUp 0.9s 0.12s ease both;
+}
+.hero-sub {
+  font-size: clamp(15px, 1.6vw, 18px);
+  color: rgba(255,255,255,0.78);
+  max-width: 560px;
+  margin-bottom: 40px;
+  animation: fadeUp 0.9s 0.24s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-main.wrap { padding-top: 56px; padding-bottom: 72px; }
-
-.hero { margin-bottom: 44px; }
-.hero h1 {
-  font-size: 32px;
+/* 「探索更多」按钮：描边 + 悬停时一道高光斜扫而过（仿参考站） */
+.btn-hero {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  font-size: 15px;
   font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
-  margin-bottom: 14px;
+  color: #ffffff;
+  text-decoration: none;
+  border: 1.5px solid rgba(255,255,255,0.75);
+  border-radius: 999px;
+  padding: 13px 44px;
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  animation: fadeUp 0.9s 0.36s ease both;
 }
-.hero .lead {
-  font-size: 15.5px;
-  color: var(--text-soft);
-  max-width: 640px;
+.btn-hero::after {                             /* 那道会滑的高光 */
+  content: "";
+  position: absolute;
+  top: -20px; left: -90px;
+  width: 60px; height: 200%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.85), transparent);
+  transform: rotate(18deg) translateX(0);
+  transition: transform 1s ease;
+  pointer-events: none;
+}
+.btn-hero:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.btn-hero:hover::after { transform: rotate(18deg) translateX(420px); }
+
+/* ==========================================================================
+   首页正题：主题区块 + mock 卡片网格
+   ========================================================================== */
+.zone {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 72px 24px 8px;
+}
+.zone-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.zone-tag {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.zone-title {
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.zone-enter {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+.zone-enter:hover { border-bottom-color: var(--accent); }
+
+/* 卡片网格：桌面 3 栏 → 平板 2 栏 → 手机 1 栏，不横向溢出 */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding-bottom: 40px;
+}
+@media (max-width: 960px)  { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px)  {
+  .card-grid { grid-template-columns: 1fr; }
+  .zone-head { flex-direction: column; align-items: flex-start; }
+  .topnav { gap: 18px; }
 }
 
-/* ---------- 双区入口卡片 ---------- */
-.zones {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px;
-  margin-bottom: 36px;
-}
-.zone-card {
-  display: block;
+/* ---------- 内容卡片（mock 数据渲染出来的那种） ---------- */
+.card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 26px 26px 22px;
-  text-decoration: none;
-  color: var(--text);
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
-.zone-card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(24, 95, 165, 0.08);
-  transform: translateY(-2px);
+/* 卡片顶部"封面条"：没有图片素材，用代码画的主题渐变代替 */
+.card-thumb {
+  height: 8px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform-origin: left center;
+  transition: transform 1s ease;
 }
-.zone-tag {
-  display: inline-block;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+.card-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.card-cat {
+  font-size: 11.5px;
+  font-weight: 600;
   color: var(--accent);
   background: var(--accent-soft);
   border-radius: 999px;
-  padding: 2px 12px;
-  margin-bottom: 14px;
+  padding: 1px 10px;
 }
-.zone-card h2 {
-  font-size: 19px;
+.card-year {
+  font-size: 12px;
+  color: var(--text-mute);
+  letter-spacing: 0.04em;
+}
+.card-title {
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 8px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;      /* 长标题折行，不横向溢出 */
 }
-.zone-card p {
-  font-size: 13.5px;
+.card-summary {
+  font-size: 13px;
   color: var(--text-soft);
-  margin-bottom: 16px;
+  flex: 1;
 }
-.zone-go {
-  font-size: 13.5px;
+.card-more {
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--accent);
-  font-weight: 500;
+  text-decoration: none;
+  margin-top: 14px;
+  padding: 4px 0;
+}
+/* 悬停：浮起 + 紫色大阴影 + 封面条轻微拉伸（仿参考站卡片动效） */
+.card:hover {
+  transform: translateY(-4px);
+  border-color: transparent;
+  box-shadow: 0 16px 38px rgba(145, 7, 130, 0.22);
+}
+.card:hover .card-thumb { transform: scaleX(1.06); }
+.card:hover .card-more { text-decoration: underline; }
+
+/* ==========================================================================
+   四种页面状态（加载 / 成功 / 空 / 错误）
+   ========================================================================== */
+
+/* —— 加载中：骨架屏灰条 —— */
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.sk {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #eeeaf2 25%, #f6f3f9 50%, #eeeaf2 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+  margin-bottom: 12px;
+}
+.sk:last-child { margin-bottom: 0; }
+.sk-tag { width: 38%; height: 12px; }
+.sk-title { width: 88%; height: 18px; }
+.sk-line { width: 100%; }
+.sk-line.short { width: 62%; }
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
 }
 
-/* ---------- 分区首页（数模区 / 电赛区） ---------- */
+/* —— 空：虚线框 + 提示（禁止白屏） —— */
+.state-box {
+  grid-column: 1 / -1;          /* 占满整行 */
+  text-align: center;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 56px 24px;
+  color: var(--text-mute);
+  font-size: 14px;
+}
+.state-box .state-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+
+/* —— 错误：提示 + 真的重试按钮 —— */
+.state-box.error { border-color: #f0c4c4; background: #fdf6f6; }
+.state-box.error .state-msg { color: #b4413f; font-weight: 600; margin-bottom: 16px; }
+.btn-retry {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 9px 30px;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.btn-retry:hover { background: #7a066d; transform: translateY(-1px); }
+
+/* ==========================================================================
+   分区首页（数模区 / 电赛区）——沿用 Day 7 结构，配色换紫
+   ========================================================================== */
+.page-main { padding-top: calc(var(--topbar-h) + 40px); padding-bottom: 72px; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
 .back-link {
   display: inline-block;
   font-size: 13.5px;
@@ -138,15 +411,10 @@ main.wrap { padding-top: 56px; padding-bottom: 72px; }
 }
 .back-link:hover { text-decoration: underline; }
 
-.zone-head { margin-bottom: 36px; }
-.zone-head .zone-tag { margin-bottom: 12px; }
-.zone-head h1 {
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin-bottom: 10px;
-}
-.zone-head .lead {
+/* 分区页的 zone-head 是纵向排版（与首页横排区分） */
+.page-main .zone-head { flex-direction: column; align-items: flex-start; }
+.page-main .zone-title { margin-bottom: 10px; }
+.page-main .zone-head .lead {
   font-size: 15px;
   color: var(--text-soft);
   max-width: 620px;
@@ -171,6 +439,7 @@ main.wrap { padding-top: 56px; padding-bottom: 72px; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 22px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .feature-card .status {
   display: inline-block;
@@ -182,19 +451,14 @@ main.wrap { padding-top: 56px; padding-bottom: 72px; }
   padding: 1px 10px;
   margin-bottom: 12px;
 }
-.feature-card h3 {
-  font-size: 15.5px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.feature-card p {
-  font-size: 13px;
-  color: var(--text-soft);
-}
+.feature-card h3 { font-size: 15.5px; font-weight: 600; margin-bottom: 6px; }
+.feature-card p { font-size: 13px; color: var(--text-soft); }
 /* 灰态 = 建设中：不可点击，避免"点了没反应"的死按钮 */
-.feature-card.off {
-  opacity: 0.55;
-  cursor: not-allowed;
+.feature-card.off { opacity: 0.55; cursor: not-allowed; }
+/* 非灰态卡片悬停反馈（供以后启用功能时使用） */
+.feature-card:not(.off):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(145, 7, 130, 0.16);
 }
 
 /* ---------- 提示条 ---------- */
@@ -207,12 +471,77 @@ main.wrap { padding-top: 56px; padding-bottom: 72px; }
   padding: 12px 18px;
 }
 
-/* ---------- 页脚 ---------- */
+/* ==========================================================================
+   页脚：深色收底 + 分栏
+   ========================================================================== */
 .footer {
-  border-top: 1px solid var(--border);
-  padding: 22px 0 40px;
+  background: #17091d;
+  color: rgba(255,255,255,0.66);
+  margin-top: 56px;
 }
-.footer .wrap {
-  font-size: 12.5px;
-  color: var(--text-mute);
+.footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 24px 40px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+.footer-logo { font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+.footer-logo span { color: #e679d8; }
+.footer-note { font-size: 12.5px; }
+.footer-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.footer-col { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+.footer-col a { color: rgba(255,255,255,0.66); text-decoration: none; transition: color 0.2s ease; }
+.footer-col a:hover { color: #e679d8; }
+@media (max-width: 720px) {
+  .footer-inner { grid-template-columns: 1fr 1fr; }
+  .footer-brand { grid-column: 1 / -1; }
+}
+/* 分区页页脚是 .footer .wrap 结构（Day 7），给够内边距 */
+.footer .wrap { padding-top: 28px; padding-bottom: 28px; }
+
+/* ==========================================================================
+   分区 Hero（数模区 / 电赛区）：约半屏高，与首页同款交互
+   ========================================================================== */
+.sub-hero { min-height: 56vh; }
+.sub-hero .hero-inner { padding: 110px 24px 72px; }
+.sub-hero .hero-title { font-size: clamp(30px, 4.4vw, 46px); }
+/* 电赛区 Hero 换一个紫色变体，两个分区有区分但不串色 */
+.sub-hero.edian-hero {
+  background:
+    radial-gradient(ellipse 85% 60% at 20% 15%, rgba(130, 35, 154, 0.55), transparent 60%),
+    radial-gradient(ellipse 65% 50% at 85% 85%, rgba(145, 7, 130, 0.42), transparent 65%),
+    linear-gradient(212deg, #17091d 0%, #2a0b31 48%, #33123c 100%);
+}
+
+/* ---------- 功能卡片动效升级：顶部主题色条 + 悬停反馈 ---------- */
+.feature-card {
+  position: relative;
+  overflow: hidden;
+}
+.feature-card::before {                    /* 顶部渐变色条（建设中时半透明） */
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+.feature-card:hover::before { opacity: 0.9; }
+/* 灰态卡片也给"轻反馈"：边框与阴影微变，不做浮起（避免误导可点击） */
+.feature-card.off:hover {
+  border-color: #d9c9e4;
+  box-shadow: 0 6px 18px rgba(34, 27, 40, 0.08);
+}
+/* 移动端功能卡片单列撑满 */
+@media (max-width: 620px) {
+  .feature-grid { grid-template-columns: 1fr; }
 }

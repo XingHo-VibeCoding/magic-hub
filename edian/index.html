@@ -1,69 +1,98 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>电子设计区 · magic-hub</title>
-<link rel="stylesheet" href="../styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>电子设计区 · magic-hub</title>
+  <meta name="description" content="电子设计竞赛备赛分区：往届国奖作品参考、器件与软件资源导航。">
+  <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 
-  <header class="topbar">
+  <!-- 顶栏：同款交互，初始透明融进分区 Hero，下滑变白 -->
+  <header class="topbar" id="topbar">
     <div class="topbar-inner">
       <a class="brand" href="../index.html">magic<span>-hub</span></a>
-      <nav class="topnav">
-        <a href="../index.html">返回首页</a>
-        <a class="active" href="index.html">电子设计区</a>
+      <nav class="topnav" aria-label="主导航">
+        <a href="../index.html" class="topnav-link">首页</a>
+        <a href="../shumo/index.html" class="topnav-link">数学建模</a>
+        <a href="index.html" class="topnav-link is-current">电子设计</a>
       </nav>
     </div>
   </header>
+
+  <!-- 分区 Hero：约半屏高，往下翻是本期功能 -->
+  <section class="hero sub-hero edian-hero" id="hero">
+    <div class="hero-inner">
+      <p class="hero-tag">分区二 · ELECTRONIC DESIGN</p>
+      <h1 class="hero-title">电子设计区</h1>
+      <p class="hero-sub">
+        面向电子设计竞赛的备赛分区：往届国奖作品参考、器件与软件资源导航。
+        本期先搭好分区结构，内容后续逐步填充。
+      </p>
+      <a class="btn-hero" href="#features" id="heroBtn">看看本期功能</a>
+    </div>
+  </section>
 
   <main class="wrap">
 
     <a class="back-link" href="../index.html">← 返回首页</a>
 
-    <section class="zone-head">
-      <span class="zone-tag">分区二 · 电赛</span>
-      <h1>电子设计区</h1>
-      <p class="lead">
-        面向电子设计竞赛的备赛分区：往届国奖作品参考、器件与软件资源导航。
-        本期先搭好分区结构，内容后续逐步填充。
+    <section id="features">
+      <h2 class="section-title">本期功能</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card off">
+          <span class="status">建设中 · 功能未接入</span>
+          <h3>资料库</h3>
+          <p>往届国奖作品合集、赛题与器件资料，先留结构。</p>
+        </div>
+
+        <div class="feature-card off">
+          <span class="status">建设中 · 功能未接入</span>
+          <h3>资源导航</h3>
+          <p>仿真工具、EDA 软件等官网链接，按用途分组。</p>
+        </div>
+
+        <div class="feature-card off">
+          <span class="status">建设中 · 功能未接入</span>
+          <h3>Skill 下载</h3>
+          <p>电赛备赛 skill，附使用指引，可复制可下载。</p>
+        </div>
+      </div>
+
+      <p class="notice">
+        电赛区本期交付页面结构与视觉框架，内容将按开发计划逐步填充。
       </p>
     </section>
 
-    <h2 class="section-title">本期功能</h2>
-
-    <div class="feature-grid">
-      <div class="feature-card off">
-        <span class="status">建设中 · 功能未接入</span>
-        <h3>资料库</h3>
-        <p>往届国奖作品合集、赛题与器件资料，先留结构。</p>
-      </div>
-
-      <div class="feature-card off">
-        <span class="status">建设中 · 功能未接入</span>
-        <h3>资源导航</h3>
-        <p>仿真工具、EDA 软件等官网链接，按用途分组。</p>
-      </div>
-
-      <div class="feature-card off">
-        <span class="status">建设中 · 功能未接入</span>
-        <h3>Skill 下载</h3>
-        <p>电赛备赛 skill，附使用指引，可复制可下载。</p>
-      </div>
-    </div>
-
-    <p class="notice">
-      电赛区本期只交付页面结构，内容将按开发计划逐步填充。
-    </p>
-
   </main>
 
+  <!-- 深色页脚（与首页同款） -->
   <footer class="footer">
-    <div class="wrap">
-      magic-hub · 电子设计区 · 双分区结构，跨区请返回首页
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-logo">magic<span>-hub</span></p>
+        <p class="footer-note">电子设计区 · MVP 阶段（mock 数据版）</p>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">本区</p>
+        <a href="index.html">电子设计区首页</a>
+        <a href="../index.html">网站首页</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">说明</p>
+        <span>功能建设中，陆续上线</span>
+        <span>双区隔离，跨区经首页</span>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">文档</p>
+        <span>PRD · 技术设计见仓库</span>
+        <span>运行说明见 README.md</span>
+      </div>
     </div>
   </footer>
 
+  <script src="../app.js"></script>
 </body>
 </html>

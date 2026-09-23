@@ -1,65 +1,91 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>magic-hub · 数学建模与电子设计竞赛辅助平台</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>magic-hub · 数学建模与电子设计竞赛保姆式辅助平台</title>
+  <meta name="description" content="资料库、AI 赛题分析、skill 生态、模拟比赛——数学建模与电子设计竞赛的一站式辅助平台。">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <header class="topbar">
+  <!-- ============ 顶栏：一开始透明融入 Hero，下滑后变白 ============ -->
+  <header class="topbar" id="topbar">
     <div class="topbar-inner">
       <a class="brand" href="index.html">magic<span>-hub</span></a>
-      <nav class="topnav">
-        <a class="active" href="index.html">首页</a>
+      <nav class="topnav" aria-label="主导航">
+        <a href="index.html" class="topnav-link is-current">首页</a>
+        <a href="shumo/index.html" class="topnav-link">数学建模</a>
+        <a href="edian/index.html" class="topnav-link">电子设计</a>
       </nav>
     </div>
   </header>
 
-  <main class="wrap">
+  <!-- ============ 首屏 Hero：一屏高，往下翻才是正题 ============ -->
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <p class="hero-tag">VIBE CODING · 第 2 周</p>
+      <h1 class="hero-title">数学建模 &amp; 电子设计<br>竞赛"保姆式"辅助平台</h1>
+      <p class="hero-sub">资料 → 分析 → 练习 → 复盘，一条龙陪跑到领奖台。</p>
+      <a class="btn-hero" href="#zone-shumo" id="heroBtn">探索更多</a>
+    </div>
+  </section>
 
-    <section class="hero">
-      <h1>数学建模 &amp; 电子设计<br>竞赛"保姆式"辅助平台</h1>
-      <p class="lead">
-        资料 → 分析 → 练习 → 复盘。为两类竞赛的备赛学生，
-        把散落的资料、评分标准和练习反馈收进一个网站，两个比赛完全分区。
-      </p>
+  <main>
+
+    <!-- ============ 正题 · 主题一：数学建模 ============ -->
+    <section class="zone" id="zone-shumo">
+      <div class="zone-head">
+        <div>
+          <p class="zone-tag">主题一 · MATH MODELING</p>
+          <h2 class="zone-title">数学建模</h2>
+        </div>
+        <a class="zone-enter" href="shumo/index.html">进入数模区 →</a>
+      </div>
+      <!-- mock 数据渲染容器，四状态由 app.js 切换 -->
+      <div class="card-grid" id="shumo-grid" data-state="loading" aria-live="polite"></div>
     </section>
 
-    <section class="zones" aria-label="分区入口">
-      <a class="zone-card" href="shumo/index.html">
-        <span class="zone-tag">分区一</span>
-        <h2>数学建模区</h2>
-        <p>
-          真题与优秀论文资料库、赛题 AI 分析、备赛 skill 下载。
-          本期内容重点深耕的分区。
-        </p>
-        <span class="zone-go">进入数模区 →</span>
-      </a>
-
-      <a class="zone-card" href="edian/index.html">
-        <span class="zone-tag">分区二</span>
-        <h2>电子设计区</h2>
-        <p>
-          往届国奖作品参考、器件与软件资源导航。
-          本期先搭好结构，内容后续逐步填充。
-        </p>
-        <span class="zone-go">进入电赛区 →</span>
-      </a>
+    <!-- ============ 正题 · 主题二：电子设计 ============ -->
+    <section class="zone" id="zone-edian">
+      <div class="zone-head">
+        <div>
+          <p class="zone-tag">主题二 · ELECTRONIC DESIGN</p>
+          <h2 class="zone-title">电子设计</h2>
+        </div>
+        <a class="zone-enter" href="edian/index.html">进入电赛区 →</a>
+      </div>
+      <div class="card-grid" id="edian-grid" data-state="loading" aria-live="polite"></div>
     </section>
-
-    <p class="notice">
-      网站建设中：资料库、资源导航、AI 赛题分析、Skill 下载等功能将陆续上线。
-    </p>
 
   </main>
 
+  <!-- ============ 页脚 ============ -->
   <footer class="footer">
-    <div class="wrap">
-      magic-hub · vibe coding 课程第 1 周作品 · 双分区结构，跨区请返回首页
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-logo">magic<span>-hub</span></p>
+        <p class="footer-note">竞赛保姆式辅助平台 · MVP 阶段（mock 数据版）</p>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">内容</p>
+        <a href="shumo/index.html">数学建模区</a>
+        <a href="edian/index.html">电子设计区</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">说明</p>
+        <span>当前为本地演示版</span>
+        <span>数据为演示用假数据</span>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">文档</p>
+        <span>PRD · 技术设计见仓库</span>
+        <span>运行说明见 README.md</span>
+      </div>
     </div>
   </footer>
 
+  <script src="mock-data.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
