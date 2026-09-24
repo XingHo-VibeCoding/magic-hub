@@ -12,12 +12,15 @@
   --border: #e9e6ee;         /* 边框 */
   --text: #221b28;           /* 正文 */
   --text-soft: #5e5768;      /* 次要文字 */
-  --text-mute: #8f8a99;      /* 弱化文字 */
+  --text-mute: #6e6878;      /* 弱化文字（原 #8f8a99 在白底仅 3.35:1，不达标；现值 5.36:1） */
   --accent: #910782;         /* 主紫 */
   --accent-2: #82239A;       /* 辅紫 */
   --accent-soft: #f7e9f5;    /* 主色浅底 */
   --radius: 12px;
   --topbar-h: 60px;          /* 顶栏高度 */
+  --container: 1120px;       /* 全站统一内容宽度（对齐基准） */
+  --space-section: 72px;     /* 全站统一区块间距（垂直节奏基准） */
+  --card-pad: 20px;          /* 全站统一卡片内边距 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -59,7 +62,7 @@ body {
 }
 
 .topbar-inner {
-  max-width: 1120px;
+  max-width: var(--container);
   margin: 0 auto;
   padding: 0 24px;
   height: var(--topbar-h);
@@ -146,7 +149,7 @@ body {
 .hero-inner {
   position: relative;
   z-index: 1;
-  max-width: 1120px;
+  max-width: var(--container);
   margin: 0 auto;
   padding: 96px 24px 64px;
   width: 100%;
@@ -219,9 +222,9 @@ body {
    首页正题：主题区块 + mock 卡片网格
    ========================================================================== */
 .zone {
-  max-width: 1120px;
+  max-width: var(--container);
   margin: 0 auto;
-  padding: 72px 24px 8px;
+  padding: var(--space-section) 24px 0;
 }
 .zone-head {
   display: flex;
@@ -258,7 +261,6 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  padding-bottom: 40px;
 }
 @media (max-width: 960px)  { .card-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 620px)  {
@@ -285,7 +287,7 @@ body {
   transition: transform 1s ease;
 }
 .card-body {
-  padding: 18px 20px 20px;
+  padding: var(--card-pad);
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -321,14 +323,11 @@ body {
   color: var(--text-soft);
   flex: 1;
 }
-.card-more {
-  align-self: flex-start;
+/* 区块级说明：取代原先每张卡片都挂的"详情·建设中"标签（一处说清，不重复 12 次） */
+.zone-note {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-  margin-top: 14px;
-  padding: 4px 0;
+  color: var(--text-mute);
+  margin: -14px 0 18px;
 }
 /* 悬停：浮起 + 紫色大阴影 + 封面条轻微拉伸（仿参考站卡片动效） */
 .card:hover {
@@ -337,7 +336,6 @@ body {
   box-shadow: 0 16px 38px rgba(145, 7, 130, 0.22);
 }
 .card:hover .card-thumb { transform: scaleX(1.06); }
-.card:hover .card-more { text-decoration: underline; }
 
 /* ==========================================================================
    四种页面状态（加载 / 成功 / 空 / 错误）
@@ -348,7 +346,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: var(--card-pad);
 }
 .sk {
   height: 14px;
@@ -368,21 +366,27 @@ body {
   to   { background-position: -200% 0; }
 }
 
-/* —— 空：虚线框 + 提示（禁止白屏） —— */
+/* —— 空：虚线框 + 说明与下一步（禁止白屏） —— */
 .state-box {
   grid-column: 1 / -1;          /* 占满整行 */
   text-align: center;
   border: 1.5px dashed var(--border);
   border-radius: var(--radius);
-  padding: 56px 24px;
+  padding: 48px 24px;
   color: var(--text-mute);
   font-size: 14px;
 }
-.state-box .state-icon { font-size: 30px; display: block; margin-bottom: 10px; }
+.state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
 
-/* —— 错误：提示 + 真的重试按钮 —— */
+/* —— 错误：说清问题 + 真的重试按钮 —— */
 .state-box.error { border-color: #f0c4c4; background: #fdf6f6; }
-.state-box.error .state-msg { color: #b4413f; font-weight: 600; margin-bottom: 16px; }
+.state-box.error .state-title { color: #8f2f2d; }
+.state-box.error p + .btn-retry { margin-top: 16px; }
 .btn-retry {
   font-size: 14px;
   font-weight: 600;
@@ -400,7 +404,7 @@ body {
    分区首页（数模区 / 电赛区）——沿用 Day 7 结构，配色换紫
    ========================================================================== */
 .page-main { padding-top: calc(var(--topbar-h) + 40px); padding-bottom: 72px; }
-.wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+.wrap { max-width: var(--container); margin: 0 auto; padding: 0 24px; }
 
 .back-link {
   display: inline-block;
@@ -430,15 +434,16 @@ body {
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);   /* 与首页 .card-grid 同一把尺子（Day 9 一致性修复） */
+  gap: 20px;                                /* 与首页一致，原 16px */
   margin-bottom: 32px;
 }
+@media (max-width: 960px) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
 .feature-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px 22px;
+  padding: var(--card-pad);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .feature-card .status {
@@ -451,10 +456,23 @@ body {
   padding: 1px 10px;
   margin-bottom: 12px;
 }
-.feature-card h3 { font-size: 15.5px; font-weight: 600; margin-bottom: 6px; }
+/* 标题字号与首页卡片对齐（原 15.5px） */
+.feature-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
 .feature-card p { font-size: 13px; color: var(--text-soft); }
-/* 灰态 = 建设中：不可点击，避免"点了没反应"的死按钮 */
-.feature-card.off { opacity: 0.55; cursor: not-allowed; }
+/* 灰态 = 建设中：不用整体 opacity（会把正文压到 3.78:1 不达标），
+   改用显式的浅底表达"未启用"；字色与首页卡片同级，状态只靠底色与徽标区分 */
+.feature-card.off {
+  background: #fbfafc;
+  border-color: #eceaf0;
+  cursor: not-allowed;
+}
+.feature-card.off h3 { color: var(--text); }        /* 与首页卡片标题同为深色 */
+.feature-card.off p { color: var(--text-soft); }    /* 与首页卡片摘要同色 */
+.feature-card.off .status {
+  color: var(--text-soft);
+  background: #ffffff;
+  border-color: #e3dfe9;
+}
 /* 非灰态卡片悬停反馈（供以后启用功能时使用） */
 .feature-card:not(.off):hover {
   transform: translateY(-3px);
@@ -477,10 +495,10 @@ body {
 .footer {
   background: #17091d;
   color: rgba(255,255,255,0.66);
-  margin-top: 56px;
+  margin-top: var(--space-section);
 }
 .footer-inner {
-  max-width: 1120px;
+  max-width: var(--container);
   margin: 0 auto;
   padding: 48px 24px 40px;
   display: grid;
@@ -508,10 +526,36 @@ body {
 .footer .wrap { padding-top: 28px; padding-bottom: 28px; }
 
 /* ==========================================================================
+   可达性：键盘焦点可见 + 尊重系统"减少动态效果"
+   ========================================================================== */
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* 深色 Hero 上紫色描边看不清，焦点环换白色 */
+.hero a:focus-visible,
+.topbar a:focus-visible,
+.btn-hero:focus-visible { outline-color: #ffffff; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* 入场动画直接显示终态；悬停位移取消（颜色变化保留，仍能看出反馈） */
+  .hero-tag, .hero-title, .hero-sub, .btn-hero { animation: none; opacity: 1; }
+  .card:hover, .btn-hero:hover { transform: none; }
+}
+
+/* ==========================================================================
    分区 Hero（数模区 / 电赛区）：约半屏高，与首页同款交互
    ========================================================================== */
 .sub-hero { min-height: 56vh; }
-.sub-hero .hero-inner { padding: 110px 24px 72px; }
+.sub-hero .hero-inner { padding: 96px 24px 64px; }
 .sub-hero .hero-title { font-size: clamp(30px, 4.4vw, 46px); }
 /* 电赛区 Hero 换一个紫色变体，两个分区有区分但不串色 */
 .sub-hero.edian-hero {
@@ -526,16 +570,13 @@ body {
   position: relative;
   overflow: hidden;
 }
-.feature-card::before {                    /* 顶部渐变色条（建设中时半透明） */
+.feature-card::before {                    /* 顶部色条：与首页 .card-thumb 同高、同饱和度 */
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 5px;
+  height: 8px;                             /* 原 5px，对齐首页 .card-thumb */
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  opacity: 0.35;
-  transition: opacity 0.3s ease;
 }
-.feature-card:hover::before { opacity: 0.9; }
 /* 灰态卡片也给"轻反馈"：边框与阴影微变，不做浮起（避免误导可点击） */
 .feature-card.off:hover {
   border-color: #d9c9e4;

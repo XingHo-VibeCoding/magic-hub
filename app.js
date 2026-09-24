@@ -29,25 +29,24 @@
     }
   }
 
-  // 空状态：虚线框提示，禁止白屏
+  // 空状态：说明现在没有内容 + 告诉用户下一步做什么（禁止白屏、也不卖萌）
   function renderEmpty(el) {
     el.setAttribute("data-state", "empty");
     el.innerHTML =
       '<div class="state-box">' +
-        '<span class="state-icon">📭</span>' +
-        "内容整理中，敬请期待" +
+        '<p class="state-title">这个区块的内容还在整理中</p>' +
+        "<p>可以先看看另一个主题，或进入分区页浏览已有资料。</p>" +
       "</div>";
   }
 
-  // 错误状态：提示 + 真的重试按钮（点了真的会重新渲染）
+  // 错误状态：说清发生了什么、怎么处理，并给一个真的能用的重试按钮
   function renderError(el, zoneKey) {
     el.setAttribute("data-state", "error");
     el.innerHTML =
       '<div class="state-box error">' +
-        '<span class="state-icon">⚠️</span>' +
-        '<p class="state-msg">数据加载失败</p>' +
-        "<p>网络似乎开了个小差，请重试。</p>" +
-        '<button class="btn-retry" type="button">重试</button>' +
+        '<p class="state-title">内容没能加载出来</p>' +
+        "<p>请先检查网络连接，然后重新加载。</p>" +
+        '<button class="btn-retry" type="button">重新加载</button>' +
       "</div>";
     el.querySelector(".btn-retry").addEventListener("click", function () {
       // 重试 = 直接重新尝试加载数据（不看演示参数，否则 ?state=error 下会永远重试到错误）
@@ -73,7 +72,6 @@
           "</div>" +
           '<h3 class="card-title"></h3>' +
           '<p class="card-summary"></p>' +
-          '<span class="card-more" title="功能建设中">详情 · 功能建设中</span>' +
         "</div>";
       // 用 textContent 填内容，避免假数据里万一有特殊字符破坏页面
       card.querySelector(".card-cat").textContent = item.category;
@@ -118,6 +116,9 @@
 
   /* ---------- 「探索更多」平滑滚动 ---------- */
 
+  // 尊重系统"减少动态效果"设置：开了就直接跳，不做滚动动画
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   function setupHeroBtn() {
     var btn = document.getElementById("heroBtn");
     if (!btn) return;
@@ -127,7 +128,7 @@
         e.preventDefault();
         // 减去顶栏高度，别让标题被顶栏压住
         var top = target.getBoundingClientRect().top + window.scrollY - 70;
-        window.scrollTo({ top: top, behavior: "smooth" });
+        window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
       }
     });
   }
