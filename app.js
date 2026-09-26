@@ -4,7 +4,7 @@
  *   1. 读 mock-data.js 的假数据，把卡片渲染进两个主题区块；
  *   2. 四种页面状态切换：loading（骨架屏）/ success（卡片）/ empty（空提示）/ error（重试）；
  *      用网址参数触发演示：?state=loading / ?state=empty / ?state=error（不带参数 = 正常成功态）
- *   3. 顶栏滚动变色：一开始透明融进 Hero，下滑超过一屏的 60% 后变白；
+ *   3. 顶栏滚动变色：初始透明融进 Hero，滚动离开顶部（>0 像素）即变白，回到最顶恢复透明；
  *   4. 「探索更多」平滑滚动到正题。
  */
 
@@ -101,13 +101,12 @@
 
   function setupTopbar() {
     var bar = document.getElementById("topbar");
-    if (!bar) return; // 分区页没有这个 id，跳过
-    var hero = document.getElementById("hero");
-    var threshold = hero ? hero.offsetHeight * 0.6 : 300;
+    if (!bar) return; // 防御：个别页面没有顶栏就跳过
 
     function update() {
-      // 滑过 Hero 六成高度后变白；回到顶部又变回透明
-      if (window.scrollY > threshold) bar.classList.add("solid");
+      // 对齐参考站（紫光同创官网 index.js 的行为）：只要离开页面顶部（滚动 > 0 像素）
+      // 就变白，回到最顶才恢复透明 —— 半透明顶栏压在滚上来的正文上会看不清。
+      if (window.scrollY > 0) bar.classList.add("solid");
       else bar.classList.remove("solid");
     }
     window.addEventListener("scroll", update, { passive: true });
