@@ -365,6 +365,53 @@ body {
 }
 .card:hover .card-thumb { transform: scaleX(1.06); }
 
+/* ---------- 卡片操作行：收藏 + 复制链接（Day 11 交互反馈） ---------- */
+/* 按钮语言对齐全站：胶囊圆角 999（.member / .btn-hero / .btn-retry 同款）、0.25~0.3s ease */
+.card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-soft);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.card-btn svg { display: block; flex-shrink: 0; }
+/* 悬停与参考站一致的"变色"反馈：文字与描边转主紫 + 浅紫底 */
+.card-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+/* 收藏生效：星标实心层淡入 + 文字换"已收藏"（状态被看见地改变 = 最明确的反馈） */
+.btn-fav[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.btn-fav .star-fill { opacity: 0; transition: opacity 0.25s ease; }
+.btn-fav[aria-pressed="true"] .star-fill { opacity: 1; }
+/* 生效瞬间的弹跳强调（0.3s，与全站节奏一致；系统"减少动效"时被全局规则压为瞬时） */
+.btn-fav.pop svg { animation: star-pop 0.3s ease; }
+@keyframes star-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
 /* ==========================================================================
    四种页面状态（加载 / 成功 / 空 / 错误）
    ========================================================================== */
@@ -427,6 +474,37 @@ body {
   transition: background 0.25s ease, transform 0.25s ease;
 }
 .btn-retry:hover { background: #7a066d; transform: translateY(-1px); }
+
+/* ---------- toast 提示条（Day 11）：操作后的"说清楚"层 ---------- */
+/* 底部居中悬浮；紫底白字 = 成功，深红底白字 = 失败（与错误态标题 #8f2f2d 同源） */
+#toast-root {
+  position: fixed;
+  left: 50%; bottom: 32px;
+  transform: translateX(-50%);
+  z-index: 1000;                 /* 要压过顶栏的 z-index 100 */
+  pointer-events: none;          /* 提示条不挡点击 */
+}
+.toast {
+  font-size: 13.5px;
+  color: #ffffff;
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 10px 22px;
+  box-shadow: 0 10px 30px rgba(145, 7, 130, 0.35);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+.toast.toast-error {
+  background: #8f2f2d;
+  box-shadow: 0 10px 30px rgba(143, 47, 45, 0.35);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+/* 窄屏长文案允许折行，不顶出屏幕 */
+@media (max-width: 620px) {
+  .toast { white-space: normal; max-width: calc(100vw - 48px); text-align: center; }
+}
 
 /* ==========================================================================
    分区首页（数模区 / 电赛区）——沿用 Day 7 结构，配色换紫
