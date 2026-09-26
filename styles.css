@@ -37,8 +37,7 @@ body {
 
 /* ==========================================================================
    顶栏（每页固定）
-   首页 special：.topbar 默认透明融进 Hero，加 .solid 后变白底深字。
-   分区页没有 #topbar 这个 id，JS 不处理，恒为白底 —— 不受影响。
+   三页顶栏都有 #topbar：初始透明融进 Hero，滚动后由 app.js 加 .solid 变白底深字。
    ========================================================================== */
 .topbar {
   position: fixed;
@@ -48,14 +47,14 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.14);
   transition: background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
 }
-/* 首页专属：滚动后变白（由 app.js 加/去 .solid） */
+/* 滚动后变白（由 app.js 在滚动 > 0 时加 / 回到最顶时去掉 .solid，三页共用） */
 .topbar.solid {
   background: rgba(255,255,255,0.96);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 2px 14px rgba(34, 27, 40, 0.07);
 }
-/* 分区页兜底：没有 Hero 可融，顶栏直接白底 */
+/* 兜底规则：万一某页顶栏没有 #topbar 这个 id 就直接白底（当前三页都有 id，此规则暂不生效） */
 .topbar:not(#topbar) {
   background: rgba(255,255,255,0.96);
   border-bottom: 1px solid var(--border);
@@ -89,6 +88,7 @@ body {
 .topnav a {
   position: relative;
   font-size: 14px;
+  font-weight: 600;                           /* 加粗对齐参考站（紫光导航 font-weight: 600） */
   color: rgba(255,255,255,0.88);
   text-decoration: none;
   padding: 4px 0;
@@ -111,6 +111,34 @@ body {
 .topbar.solid .topnav a.is-current,
 .topbar:not(#topbar) .topnav a.is-current { color: var(--accent); font-weight: 600; }
 .topnav a:hover::after { width: 100%; }
+
+/* 顶栏右侧整体（导航 + 会员中心），避免三段元素被 space-between 拆开 */
+.topbar-right { display: flex; align-items: center; gap: 22px; }
+
+/* 会员中心入口：本期只做图标与外观，注册登录功能后续接入（PRD 阶段二）。
+   用 span 而非 <a>，保证它现在不可点 —— 不做假按钮（AC13） */
+.member {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--accent);                  /* 紫底白字药丸形，对齐参考站会员中心 */
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+}
+.member svg { display: block; }
+/* 窄屏：导航间距收紧，会员中心只留图标防溢出 */
+@media (max-width: 720px) {
+  .topnav { gap: 16px; }
+  .topbar-right { gap: 14px; }
+  .member { padding: 6px 10px; }
+  .member-text { display: none; }
+}
 
 /* ==========================================================================
    首页 Hero：一屏高，紫黑渐变 + 代码画的"电路/数据"纹理
