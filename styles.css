@@ -140,6 +140,127 @@ body {
   .member-text { display: none; }
 }
 
+/* ---------- 顶栏搜索入口 + 全屏搜索层（Day 12 追加，对齐紫光：顶栏放大镜 → 全屏搜索） ---------- */
+/* 入口只是放大镜图标：透明顶栏时白色，变白后深灰，悬停转主紫 —— 与导航链接同一配色规则 */
+.search-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  transition: color 0.25s ease, background 0.25s ease;
+}
+.search-toggle:hover { color: var(--accent); background: var(--accent-soft); }
+.search-toggle svg { display: block; }
+.topbar.solid .search-toggle,
+.topbar:not(#topbar) .search-toggle { color: var(--text-soft); }
+.topbar.solid .search-toggle:hover,
+.topbar:not(#topbar) .search-toggle:hover { color: var(--accent); }
+
+/* 全屏搜索层：fixed 铺满 + 深紫半透明遮罩（对齐参考站 searchformMain + search_mask） */
+.search-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 500;                               /* 要压过顶栏的 z-index 100 */
+  background: rgba(24, 12, 28, 0.92);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.search-overlay.open { opacity: 1; }
+.search-close {
+  position: absolute;
+  top: 24px; right: 28px;
+  width: 40px; height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: color 0.25s ease, background 0.25s ease;
+}
+.search-close:hover { color: #ffffff; background: rgba(255, 255, 255, 0.14); }
+.search-close svg { display: block; }
+.search-panel {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 18vh 24px 0;
+}
+/* 大号白色胶囊输入框（参考站全屏搜索的输入框形态，用本站胶囊语言） */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 14px 24px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  color: var(--text-mute);
+}
+.search-overlay-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 17px;
+  font-family: inherit;
+  color: var(--text);
+  background: transparent;
+}
+.search-overlay-input::placeholder { color: var(--text-mute); }
+.search-hint {
+  margin: 14px 6px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.search-results {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+.search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 13px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  color: #ffffff;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+.search-result:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+.sr-title { font-size: 15px; font-weight: 600; }
+.sr-meta { font-size: 12.5px; color: rgba(255, 255, 255, 0.65); }
+/* 深色遮罩上的无结果框：state-box 原是浅底样式，这里换深色底白字 */
+.search-empty {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.search-empty .state-title { color: #ffffff; }
+.search-empty p { color: rgba(255, 255, 255, 0.65); }
+/* 窄屏：搜索层留边收紧，关闭按钮贴边 */
+@media (max-width: 720px) {
+  .search-panel { padding: 12vh 16px 0; }
+  .search-close { top: 14px; right: 14px; }
+}
+
 /* ==========================================================================
    首页 Hero：一屏高，紫黑渐变 + 代码画的"电路/数据"纹理
    ========================================================================== */
@@ -504,6 +625,58 @@ body {
 /* 窄屏长文案允许折行，不顶出屏幕 */
 @media (max-width: 620px) {
   .toast { white-space: normal; max-width: calc(100vw - 48px); text-align: center; }
+}
+
+/* ---------- 搜索筛选栏（Day 12）：关键词 + 类别 → 只显示匹配内容 ---------- */
+/* 参考站顶栏有搜索框（placeholder「搜索」）；输入框样式按本站家族语言设计：
+   胶囊圆角、0.25s ease、聚焦主紫描边 + 浅紫光晕（与按钮/焦点环同一语言） */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+.filter-input {
+  flex: 1;
+  max-width: 380px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 18px;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.filter-input::placeholder { color: var(--text-mute); }
+.filter-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.filter-select {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+.filter-select:hover { border-color: var(--accent); color: var(--accent); }
+.filter-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  outline: none;
+}
+/* 无结果提示里「查看全部」按钮的间距（按钮复用 .btn-retry 家族样式） */
+.state-box .btn-retry { margin-top: 16px; }
+/* 窄屏：筛选栏纵向堆叠 */
+@media (max-width: 620px) {
+  .filter-bar { flex-direction: column; }
+  .filter-input { max-width: none; }
 }
 
 /* ==========================================================================

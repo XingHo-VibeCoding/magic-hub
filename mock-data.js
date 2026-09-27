@@ -43,6 +43,18 @@ window.MOCK_DATA = {
       year: "2023",
       title: "美赛 MCM · O 奖论文",
       summary: "共享单车调度问题：从问题重述到敏感性分析的全链条范文。"
+    },
+    {
+      category: "AI skill",
+      year: "2025",
+      title: "线性规划求解 skill 模板",
+      summary: "输入题目自动拆解约束条件与目标函数，附 Python 求解代码框架。"
+    },
+    {
+      category: "评委点评",
+      year: "2024",
+      title: "C 题获奖队伍评委点评实录",
+      summary: "评委逐队点评假设、模型与论文表达，标注高频失分点。"
     }
   ],
 
@@ -83,6 +95,18 @@ window.MOCK_DATA = {
       year: "2023",
       title: "电路仿真工具入门",
       summary: "Multisim 与 LTspice 基础操作，赛前验证电路不再靠玄学。"
+    },
+    {
+      category: "AI skill",
+      year: "2025",
+      title: "电路方案速查 skill 模板",
+      summary: "描述功能需求即可检索参考电路、器件选型与常见坑。"
+    },
+    {
+      category: "评委点评",
+      year: "2024",
+      title: "H 题国赛评审现场点评",
+      summary: "小车类赛题评审要点：方案合理性、实测数据与现场答辩表现。"
     }
   ]
 };

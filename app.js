@@ -7,7 +7,11 @@
  *   3. 顶栏滚动变色：初始透明融进 Hero，滚动离开顶部（>0 像素）即变白，回到最顶恢复透明；
  *   4. 「探索更多」平滑滚动到正题；
  *   5. 卡片交互反馈（Day 11）：收藏星标（状态变化+弹跳）、复制链接（真剪贴板）、
- *      toast 提示条——反馈三层叠加：状态变了 + 动一下 + 说清楚。
+ *      toast 提示条——反馈三层叠加：状态变了 + 动一下 + 说清楚；
+ *   6. 搜索筛选（Day 12，按 skills/frontend-guidelines 规则实现）：
+ *      输入关键词或选类别 → 只显示匹配卡片 → 无结果给「没有找到相关内容」+ 下一步 → 清空恢复；
+ *   7. 全屏搜索层（Day 12 追加，对齐紫光互动）：顶栏放大镜点开 → 全屏搜索，
+ *      结果点一下跳到对应区块并自动填好筛选词，Esc / 关闭按钮 / 点遮罩退出。
  */
 
 (function () {
@@ -61,11 +65,18 @@
   // 成功状态：mock 数据 → 卡片（每张卡带「收藏 / 复制链接」操作行，Day 11）
   function renderSuccess(el, list, zoneKey) {
     el.setAttribute("data-state", "success");
+    renderCards(el, list, zoneKey);
+  }
+
+  // 渲染一批卡片（renderSuccess 与搜索筛选共用，Day 12 抽出）；
+  // 清空容器放在这里：无论谁调用都是"整批重画"，不会越叠越多
+  function renderCards(el, list, zoneKey) {
     el.innerHTML = "";
-    list.forEach(function (item, index) {
+    list.forEach(function (item) {
       var card = document.createElement("article");
       card.className = "card";
-      var cardKey = zoneKey + "-" + index;   // 收藏状态的记忆键（区块 + 序号）
+      // 收藏状态的记忆键用标题：筛选后卡片顺序会变，序号键会让收藏错位
+      var cardKey = zoneKey + "-" + item.title;
       card.innerHTML =
         '<div class="card-thumb" aria-hidden="true"></div>' +
         '<div class="card-body">' +
@@ -186,6 +197,13 @@
     var favBtn = card.querySelector(".btn-fav");
     var copyBtn = card.querySelector(".btn-copy");
 
+    // 重渲染后恢复已收藏状态：状态存在 favorites 里，DOM 是新的，得重新对齐
+    // （只恢复外观，不弹 toast、不弹跳——那是点击瞬间的反馈）
+    if (favorites.has(cardKey)) {
+      favBtn.setAttribute("aria-pressed", "true");
+      favBtn.querySelector("span").textContent = "已收藏";
+    }
+
     favBtn.addEventListener("click", function () {
       var pressed = favBtn.getAttribute("aria-pressed") === "true";
       if (pressed) {
@@ -220,10 +238,227 @@
     });
   }
 
+  /* ---------- 搜索筛选（Day 12）：关键词 + 类别 → 只显示匹配内容 ---------- */
+
+  // 首页两个主题区块的筛选：输入框 + 类别下拉（下拉选项从数据动态生成）
+  function setupZoneFilter(zoneKey) {
+    var bar = document.querySelector('.filter-bar[data-zone="' + zoneKey + '"]');
+    var grid = document.getElementById(zoneKey + "-grid");
+    if (!bar || !grid) return;
+    var input = bar.querySelector(".filter-input");
+    var select = bar.querySelector(".filter-select");
+
+    // 类别下拉动态生成：mock 数据加新类型，选项自动跟上，不用改代码
+    var cats = [];
+    (window.MOCK_DATA[zoneKey] || []).forEach(function (item) {
+      if (cats.indexOf(item.category) < 0) cats.push(item.category);
+    });
+    cats.forEach(function (c) {
+      var opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      select.appendChild(opt);
+    });
+
+    function applyFilter() {
+      // 演示态（?state=loading/empty/error）不抢戏：筛选只在正常成功态生效
+      if (grid.getAttribute("data-state") !== "success") return;
+      var kw = input.value.trim().toLowerCase();
+      var cat = select.value;
+      var matched = (window.MOCK_DATA[zoneKey] || []).filter(function (item) {
+        var hay = (item.title + item.category + item.summary + item.year).toLowerCase();
+        var hitCat = !cat || item.category === cat;
+        var hitKw = !kw || hay.indexOf(kw) >= 0;
+        return hitCat && hitKw;
+      });
+      if (matched.length) {
+        renderCards(grid, matched, zoneKey);
+      } else {
+        // 无结果：说清发生了什么 + 给下一步（符合 SKILL.md「失败必须给下一步」）
+        grid.innerHTML =
+          '<div class="state-box">' +
+            '<p class="state-title">没有找到相关内容</p>' +
+            "<p>换个关键词试试，或清空筛选查看全部。</p>" +
+            '<button class="btn-retry filter-clear" type="button">查看全部</button>' +
+          "</div>";
+        grid.querySelector(".filter-clear").addEventListener("click", function () {
+          input.value = "";
+          select.value = "";
+          applyFilter();
+          input.focus();
+        });
+      }
+    }
+
+    input.addEventListener("input", applyFilter);
+    select.addEventListener("change", applyFilter);
+  }
+
+  // 分区页的筛选：静态功能卡片用显示/隐藏过滤（不重建 DOM，保留灰态等既有样式）
+  function setupStaticFilter() {
+    var bar = document.querySelector(".filter-bar-static");
+    if (!bar) return;
+    var input = bar.querySelector(".filter-input");
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".feature-grid .feature-card"));
+    var emptyBox = document.querySelector(".filter-empty");
+    if (!input || !cards.length) return;
+
+    function applyFilter() {
+      var kw = input.value.trim().toLowerCase();
+      var shown = 0;
+      cards.forEach(function (card) {
+        var hit = !kw || card.textContent.toLowerCase().indexOf(kw) >= 0;
+        card.style.display = hit ? "" : "none";
+        if (hit) shown++;
+      });
+      if (!emptyBox) return;
+      if (shown === 0) {
+        emptyBox.hidden = false;
+        var clearBtn = emptyBox.querySelector(".filter-clear");
+        if (clearBtn && !clearBtn.__bound) {   // 只绑一次，防反复显隐重复绑定
+          clearBtn.__bound = true;
+          clearBtn.addEventListener("click", function () {
+            input.value = "";
+            applyFilter();
+            input.focus();
+          });
+        }
+      } else {
+        emptyBox.hidden = true;
+      }
+    }
+
+    input.addEventListener("input", applyFilter);
+  }
+
+  /* ---------- 全屏搜索层（Day 12 追加）：顶栏放大镜 → 全屏搜索 ---------- */
+
+  // 收集当前页面可搜索的内容：首页 = 两区 mock 数据；分区页 = 静态功能卡片
+  // （两个数据源天然互斥：首页没有 .feature-card，分区页没有 MOCK_DATA）
+  function collectSearchable() {
+    var items = [];
+    var zoneNames = { shumo: "数学建模", edian: "电子设计" };
+    ["shumo", "edian"].forEach(function (zone) {
+      (((window.MOCK_DATA || {})[zone]) || []).forEach(function (item) {
+        items.push({
+          zone: zone,
+          title: item.title,
+          meta: item.category + " · " + item.year + " · " + zoneNames[zone],
+          hay: (item.title + item.category + item.summary + item.year).toLowerCase()
+        });
+      });
+    });
+    document.querySelectorAll(".feature-grid .feature-card h3").forEach(function (h3) {
+      items.push({
+        zone: "feature",
+        title: h3.textContent,
+        meta: "本区功能",
+        hay: h3.closest(".feature-card").textContent.toLowerCase()
+      });
+    });
+    return items;
+  }
+
+  function setupSearchOverlay() {
+    var overlay = document.getElementById("search-overlay");
+    var toggle = document.querySelector(".search-toggle");
+    if (!overlay || !toggle) return;
+    var input = overlay.querySelector(".search-overlay-input");
+    var resultsBox = overlay.querySelector(".search-results");
+    var hint = overlay.querySelector(".search-hint");
+    var closeBtn = overlay.querySelector(".search-close");
+    var lastFocus = null;
+
+    function renderResults() {
+      var kw = input.value.trim().toLowerCase();
+      if (!kw) {
+        hint.hidden = false;
+        hint.textContent = "输入关键词，搜索本站全部可查内容（共 " + collectSearchable().length + " 条）";
+        resultsBox.innerHTML = "";
+        return;
+      }
+      var matched = collectSearchable().filter(function (it) {
+        return it.hay.indexOf(kw) >= 0;
+      });
+      hint.hidden = true;
+      resultsBox.innerHTML = "";
+      if (!matched.length) {
+        // 无结果：说清发生了什么 + 给下一步（SKILL.md：失败必须给下一步）
+        resultsBox.innerHTML =
+          '<div class="state-box search-empty">' +
+            '<p class="state-title">没有找到相关内容</p>' +
+            "<p>换个关键词试试，或清空后浏览全部内容。</p>" +
+          "</div>";
+        return;
+      }
+      matched.forEach(function (it) {
+        var btn = document.createElement("button");
+        btn.className = "search-result";
+        btn.type = "button";
+        btn.innerHTML = '<span class="sr-title"></span><span class="sr-meta"></span>';
+        btn.querySelector(".sr-title").textContent = it.title;
+        btn.querySelector(".sr-meta").textContent = it.meta;
+        btn.addEventListener("click", function () { gotoResult(it, kw); });
+        resultsBox.appendChild(btn);
+      });
+    }
+
+    function open() {
+      lastFocus = document.activeElement;
+      overlay.hidden = false;
+      document.body.style.overflow = "hidden";    // 背景页不许滚，防焦点/滚动错乱
+      requestAnimationFrame(function () { overlay.classList.add("open"); });
+      input.value = "";
+      renderResults();
+      input.focus();
+    }
+
+    function close() {
+      overlay.classList.remove("open");
+      document.body.style.overflow = "";
+      setTimeout(function () { overlay.hidden = true; }, 250);   // 等淡出动画走完再隐藏
+      if (lastFocus && lastFocus.focus) lastFocus.focus();       // 焦点还给触发按钮
+    }
+
+    // 点结果：关层 → 把关键词填进对应区块的现成筛选框 → 滚过去。
+    // 复用已有筛选逻辑（dispatch input 事件），不另写一套，两处行为永远一致。
+    function gotoResult(item, kw) {
+      close();
+      var filterInput, scrollTarget;
+      if (item.zone === "feature") {
+        filterInput = document.querySelector(".filter-bar-static .filter-input");
+        scrollTarget = document.getElementById("features");
+      } else {
+        filterInput = document.querySelector('.filter-bar[data-zone="' + item.zone + '"] .filter-input');
+        scrollTarget = document.getElementById("zone-" + item.zone);
+      }
+      if (filterInput) {
+        filterInput.value = kw;
+        filterInput.dispatchEvent(new Event("input"));
+      }
+      if (scrollTarget) {
+        var top = scrollTarget.getBoundingClientRect().top + window.scrollY - 70;
+        setTimeout(function () {
+          window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
+        }, 60);
+      }
+    }
+
+    toggle.addEventListener("click", open);
+    closeBtn.addEventListener("click", close);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    overlay.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+    input.addEventListener("input", renderResults);
+  }
+
   /* ---------- 启动 ---------- */
 
   renderZone("shumo");
   renderZone("edian");
   setupTopbar();
   setupHeroBtn();
+  setupZoneFilter("shumo");
+  setupZoneFilter("edian");
+  setupStaticFilter();
+  setupSearchOverlay();
 })();
