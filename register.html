@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>注册 · 会员中心 · magic-hub</title>
+  <meta name="description" content="注册 magic-hub 账号：填写院校与参赛方向，收藏和上传的资料会归到你的账号下。账号系统接入后端后正式开放。">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 顶栏：同款交互，初始透明融进 Hero，下滑变白 -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">magic<span>-hub</span></a>
+      <div class="topbar-right">
+        <nav class="topnav" aria-label="主导航">
+          <a href="index.html" class="topnav-link">首页</a>
+          <a href="shumo/index.html" class="topnav-link">数学建模</a>
+          <a href="edian/index.html" class="topnav-link">电子设计</a>
+        </nav>
+        <a class="member" href="login.html" aria-current="page">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="8.2" r="3.6" fill="currentColor"/><path d="M4.5 19.5c1.2-3.4 4-5.2 7.5-5.2s6.3 1.8 7.5 5.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <span class="member-text">会员中心</span>
+        </a>
+        <button class="search-toggle" type="button" aria-label="打开搜索">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 全屏搜索层（与全站一致） -->
+  <div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label="站内搜索" hidden>
+    <button class="search-close" type="button" aria-label="关闭搜索">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+    </button>
+    <div class="search-panel">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input class="search-overlay-input" type="search" placeholder="搜索论文、题目、skill、评分标准…" aria-label="站内搜索">
+      </div>
+      <p class="search-hint">输入关键词，搜索本站全部可查内容</p>
+      <div class="search-results" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <section class="hero sub-hero auth-hero" id="hero">
+    <div class="hero-inner">
+      <p class="hero-tag">会员中心</p>
+      <h1 class="hero-title">注册</h1>
+      <p class="hero-sub">注册后你上传的资料只有自己可见，官方发布的资料全站共享。</p>
+    </div>
+  </section>
+
+  <main class="wrap auth-main">
+    <div class="auth-card">
+      <h2 class="auth-title">注册账号</h2>
+      <p class="auth-lead">带 * 的是必填项，填错的地方会当场提示改法。</p>
+
+      <form class="auth-form" data-auth="register" novalidate>
+        <div class="field">
+          <label for="rg-email">邮箱 <span class="req">*</span></label>
+          <input class="filter-input form-input" id="rg-email" name="email" type="email" data-rule="email"
+                 placeholder="name@example.com" autocomplete="email">
+          <p class="field-error" data-error="email" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="rg-username">用户名 <span class="req">*</span></label>
+          <input class="filter-input form-input" id="rg-username" name="username" type="text" data-rule="username"
+                 placeholder="3-16 位字母、数字或下划线" autocomplete="username">
+          <p class="field-error" data-error="username" hidden></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="rg-password">设置密码 <span class="req">*</span></label>
+            <input class="filter-input form-input" id="rg-password" name="password" type="password" data-rule="password"
+                   placeholder="至少 8 位" autocomplete="new-password">
+            <p class="field-error" data-error="password" hidden></p>
+          </div>
+          <div class="field">
+            <label for="rg-confirm">确认密码 <span class="req">*</span></label>
+            <input class="filter-input form-input" id="rg-confirm" name="confirm" type="password" data-rule="confirm"
+                   placeholder="再输一次" autocomplete="new-password">
+            <p class="field-error" data-error="confirm" hidden></p>
+          </div>
+        </div>
+        <p class="field-help">密码至少 8 位，且同时包含字母和数字。</p>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="rg-school">所在院校 <span class="req">*</span></label>
+            <input class="filter-input form-input" id="rg-school" name="school" type="text" data-rule="school"
+                   placeholder="例如：武汉大学">
+            <p class="field-error" data-error="school" hidden></p>
+          </div>
+          <div class="field">
+            <label for="rg-identity">身份 <span class="req">*</span></label>
+            <select class="filter-select form-select" id="rg-identity" name="identity" data-rule="identity">
+              <option value="">请选择</option>
+              <option value="undergrad">本科生</option>
+              <option value="graduate">研究生</option>
+              <option value="teacher">指导教师</option>
+              <option value="other">其他</option>
+            </select>
+            <p class="field-error" data-error="identity" hidden></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="rg-direction-label">参赛方向</label>
+          <!-- 多选标签：选中态用 aria-pressed 表达，键盘（Tab + 回车/空格）同样可用 -->
+          <div class="choice-group" role="group" aria-labelledby="rg-direction-label">
+            <button class="lib-tab" type="button" aria-pressed="false">数学建模</button>
+            <button class="lib-tab" type="button" aria-pressed="false">电子设计</button>
+            <button class="lib-tab" type="button" aria-pressed="false">两个都参加</button>
+          </div>
+          <p class="field-help">可以多选，也可以先不选，之后在个人资料里再改。</p>
+        </div>
+
+        <div class="field">
+          <label class="check-row" for="rg-agree">
+            <input id="rg-agree" name="agree" type="checkbox" data-rule="agree">
+            <span>我已阅读并同意《用户协议》与《隐私政策》，并了解自己上传的资料只有本人可见。</span>
+          </label>
+          <p class="field-error" data-error="agree" hidden></p>
+        </div>
+
+        <button class="btn-retry btn-auth" type="submit">注 册</button>
+
+        <p class="auth-result" role="status" hidden></p>
+      </form>
+
+      <div class="auth-foot">
+        <span>已有账号？<a href="login.html">登录</a></span>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-logo">magic<span>-hub</span></p>
+        <p class="footer-note">竞赛保姆式辅助平台 · 演示版</p>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">内容</p>
+        <a href="shumo/index.html">数学建模区</a>
+        <a href="edian/index.html">电子设计区</a>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">说明</p>
+        <span>功能陆续开放</span>
+        <span>内容为演示数据</span>
+      </div>
+      <div class="footer-col">
+        <p class="footer-head">文档</p>
+        <span>开发文档记录在项目仓库</span>
+        <span>本地运行方法见 README</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="mock-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
