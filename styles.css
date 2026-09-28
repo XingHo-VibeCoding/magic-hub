@@ -115,8 +115,8 @@ body {
 /* 顶栏右侧整体（导航 + 会员中心），避免三段元素被 space-between 拆开 */
 .topbar-right { display: flex; align-items: center; gap: 22px; }
 
-/* 会员中心入口：本期只做图标与外观，注册登录功能后续接入（PRD 阶段二）。
-   用 span 而非 <a>，保证它现在不可点 —— 不做假按钮（AC13） */
+/* 会员中心入口：Day 13 起指向真实登录页（login.html），不再是不可点的占位。
+   样式沿用紫底白字药丸；悬停与 .btn-retry 同款（加深 + 轻上浮） */
 .member {
   display: inline-flex;
   align-items: center;
@@ -127,10 +127,14 @@ body {
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
-  cursor: default;
-  user-select: none;
+  text-decoration: none;
+  cursor: pointer;
   white-space: nowrap;
+  transition: background 0.25s ease, transform 0.25s ease;
 }
+.member:hover { background: #7a066d; transform: translateY(-1px); }
+/* 当前就在登录/注册页：药丸压深一档，与导航的 is-current 同一个意思 */
+.member[aria-current="page"] { background: #7a066d; }
 .member svg { display: block; }
 /* 窄屏：导航间距收紧，会员中心只留图标防溢出 */
 @media (max-width: 720px) {
@@ -769,6 +773,135 @@ body {
 }
 
 /* ==========================================================================
+   资料库页（Day 13）：面包屑 / 分类标签 / 列表视图 ↔ 详情视图
+   ========================================================================== */
+/* 面包屑：告诉用户"我在哪一层"，末项是当前页（aria-current 标注，读屏可识别） */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-soft);
+  margin: 0 0 22px;
+}
+.breadcrumb a {
+  color: var(--text-soft);
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb .crumb-sep { color: var(--text-mute); }
+.breadcrumb .crumb-current { color: var(--text); font-weight: 600; }
+
+/* 工具行：左侧分类标签 + 右侧关键词搜索 */
+.lib-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.lib-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 标签沿用全站胶囊语言；选中态用 aria-pressed（不是 :checked —— 这儿不是表单控件） */
+.lib-tab {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 15px;
+  cursor: pointer;
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.lib-tab:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.lib-tab[aria-pressed="true"] {
+  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.lib-search { flex: 1; max-width: 260px; }
+
+/* 详情视图：单卡片排版，与全站卡片同一族（白底 + 1px 边 + 20px 内边距级） */
+.lib-detail {
+  max-width: 780px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+.lib-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.lib-tag {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+.lib-year { font-size: 12.5px; color: var(--text-soft); }
+.lib-detail-title {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.lib-detail-summary {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-soft);
+  margin-bottom: 22px;
+}
+/* 正文占位：虚线框说清"这里以后有什么"，不编假正文 */
+.lib-placeholder {
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  background: #fbfafc;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.lib-placeholder .state-title { font-size: 14px; margin-bottom: 6px; }
+.lib-placeholder p { font-size: 13px; color: var(--text-soft); line-height: 1.7; }
+/* 返回按钮复用 .btn-retry 的家族样式，但它是链接不是按钮 */
+.lib-back { display: inline-flex; align-items: center; text-decoration: none; }
+/* 卡片上的「查看详情」也是卡片按钮家族，靠右站，与收藏/复制区分开层级 */
+.card-link { margin-left: auto; text-decoration: none; }
+/* 窄屏：工具行纵向堆叠，详情卡内边距收紧 */
+@media (max-width: 620px) {
+  .lib-toolbar { flex-direction: column; align-items: stretch; }
+  .lib-search { max-width: none; }
+  .lib-detail { padding: 22px; }
+}
+/* 分区页"已开放"的功能卡：可点就得看着像能点（主紫徽标 + 悬停浮起，与灰态划清界限） */
+.feature-card-link { display: block; text-decoration: none; }
+.feature-card-link .status {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: #f0d9ec;
+}
+.feature-card-link h3 { color: var(--text); }
+.feature-card-link .card-enter {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ==========================================================================
    页脚：深色收底 + 分栏
    ========================================================================== */
 .footer {
@@ -864,4 +997,137 @@ button:focus-visible {
 /* 移动端功能卡片单列撑满 */
 @media (max-width: 620px) {
   .feature-grid { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   会员中心：登录 / 注册（Day 13 板块④，结构对齐参考站会员页）
+   参考站做法：顶栏「会员中心」跳到独立页面，未登录时该页直接就是登录表单；
+   登录 = 邮箱 + 密码 + 验证码 + 「登 录」+ 底部「还没账号? 注册」「忘记密码」；
+   注册 = 单列表单 + 协议勾选 + 底部「已有账号？ 登录」。
+   ========================================================================== */
+
+/* 比分区页更矮的 Hero：任务页不必占满一屏，只要给顶栏一个透明过渡背景 */
+.auth-hero { min-height: 38vh; }
+.auth-hero .hero-inner { padding-bottom: 56px; }
+.auth-hero .hero-sub { margin-bottom: 0; }
+
+.auth-main { padding-top: 56px; padding-bottom: var(--space-section); }
+
+.auth-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  box-shadow: 0 12px 34px rgba(34, 27, 40, 0.07);
+}
+.auth-title { font-size: 22px; font-weight: 700; color: var(--text); }
+.auth-lead { font-size: 13.5px; color: var(--text-mute); margin: 6px 0 24px; }
+
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > label { font-size: 13px; font-weight: 600; color: var(--text-soft); }
+.field .req { color: var(--accent); }        /* 必填标记 */
+/* 两列并排的字段组（密码/确认密码、院校/身份）；窄屏落回单列 */
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* 表单字段复用 .filter-input / .filter-select 的颜色、边框与聚焦光晕（同一语言），
+   只改成满宽 + 卡片同款圆角 —— 满宽的胶囊不成形，所以这里用 --radius */
+.form-input,
+.form-select {
+  width: 100%;
+  max-width: none;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  color: var(--text);
+}
+.form-input { font-size: 14px; }
+
+/* 出错：输入框转红描边 + 下方红字说清怎么改（错误色与错误态标题同源 #8f2f2d） */
+.field.has-error .form-input,
+.field.has-error .form-select { border-color: #d9a3a1; }
+.field-error { font-size: 12.5px; line-height: 1.6; color: #8f2f2d; }
+
+/* 验证码：点一下换一张（本地演示版，接后端后换成服务端图片） */
+.captcha-row { display: flex; gap: 10px; }
+.captcha-row .form-input { flex: 1; }
+.captcha-box {
+  flex-shrink: 0;
+  width: 112px;
+  font-family: Consolas, ui-monospace, monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;                         /* 补掉字距造成的右偏 */
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.25s ease;
+}
+.captcha-box:hover { border-color: var(--accent); }
+
+/* 提交按钮：直接复用 .btn-retry 的胶囊样式，这里只改满宽与字号 */
+.btn-auth { width: 100%; padding: 11px 20px; font-size: 15px; font-family: inherit; }
+
+/* 提交结果提示（校验通过后说明下一步；role=status 让读屏器播报） */
+.auth-result {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-soft);
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+/* 多选项（参赛方向）：复用资料库的分类标签样式，选中态同样靠 aria-pressed */
+.choice-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.field-help { font-size: 12.5px; color: var(--text-mute); }
+
+/* 协议勾选：.field > label 的加粗只给字段名，协议正文要正常字重 */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+.check-row input { margin-top: 4px; flex-shrink: 0; accent-color: var(--accent); }
+
+/* 卡片底部互链：还没账号？注册 / 忘记密码 */
+.auth-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 13.5px;
+  color: var(--text-mute);
+}
+.auth-foot a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.auth-foot a:hover { text-decoration: underline; }
+.auth-link {
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.auth-link:hover { text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .field-row { grid-template-columns: 1fr; }
+  .auth-card { padding: 24px 20px; }
 }

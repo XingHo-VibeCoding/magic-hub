@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>电子设计区 · magic-hub</title>
-  <meta name="description" content="电子设计竞赛备赛分区：往届国奖作品参考、器件与软件资源导航。">
+  <title>数模资料库 · magic-hub</title>
+  <meta name="description" content="数学建模资料库：真题、优秀论文、评分标准、知识讲解，按类型浏览或直接搜索。">
   <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 
-  <!-- 顶栏：同款交互，初始透明融进分区 Hero，下滑变白 -->
+  <!-- 顶栏：同款交互，初始透明融进 Hero，下滑变白 -->
   <header class="topbar" id="topbar">
     <div class="topbar-inner">
       <a class="brand" href="../index.html">magic<span>-hub</span></a>
       <div class="topbar-right">
         <nav class="topnav" aria-label="主导航">
           <a href="../index.html" class="topnav-link">首页</a>
-          <a href="../shumo/index.html" class="topnav-link">数学建模</a>
-          <a href="index.html" class="topnav-link is-current">电子设计</a>
+          <a href="index.html" class="topnav-link is-current">数学建模</a>
+          <a href="../edian/index.html" class="topnav-link">电子设计</a>
         </nav>
         <a class="member" href="../login.html">
           <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="8.2" r="3.6" fill="currentColor"/><path d="M4.5 19.5c1.2-3.4 4-5.2 7.5-5.2s6.3 1.8 7.5 5.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -45,61 +45,58 @@
     </div>
   </div>
 
-  <!-- 分区 Hero：约半屏高，往下翻是功能列表 -->
-  <section class="hero sub-hero edian-hero" id="hero">
+  <!-- 分区极简 Hero：给顶栏一个透明过渡的背景 -->
+  <section class="hero sub-hero" id="hero">
     <div class="hero-inner">
-      <p class="hero-tag">全国大学生电子设计竞赛</p>
-      <h1 class="hero-title">电子设计区</h1>
-      <p class="hero-sub">
-        面向电子设计竞赛的备赛分区：往届国奖作品参考、器件与软件资源导航。
-      </p>
-      <a class="btn-hero" href="#features" id="heroBtn">探索更多</a>
+      <p class="hero-tag">数学建模 · 资料库</p>
+      <h1 class="hero-title">数模资料库</h1>
+      <p class="hero-sub">真题、优秀论文、评分标准、知识讲解，按类型浏览或直接搜索。</p>
+      <a class="btn-hero" href="#library-app" id="heroBtn">探索更多</a>
     </div>
   </section>
 
-  <main class="wrap">
+  <!-- data-zone 告诉 app.js 这是哪个区的资料库 -->
+  <main class="wrap" id="library-app" data-zone="shumo">
 
-    <a class="back-link" href="../index.html">← 返回首页</a>
+    <!-- 面包屑（余力加练）：列表时末项是「资料库」，看详情时换成资料标题 -->
+    <nav class="breadcrumb" aria-label="面包屑导航">
+      <a href="../index.html">首页</a>
+      <span class="crumb-sep">/</span>
+      <a href="index.html">数学建模</a>
+      <span class="crumb-sep">/</span>
+      <span class="crumb-current" aria-current="page">资料库</span>
+    </nav>
 
-    <section id="features">
-      <h2 class="section-title">功能一览</h2>
-
-      <!-- 搜索筛选：输入关键词只显示匹配功能（Day 12） -->
-      <div class="filter-bar filter-bar-static">
-        <input class="filter-input" type="search" placeholder="搜索本区功能" aria-label="搜索电子设计区功能">
+    <!-- ============ 视图一：资料列表 ============ -->
+    <section class="lib-list-view" aria-label="资料列表">
+      <div class="lib-toolbar">
+        <div class="lib-tabs" role="group" aria-label="按类型筛选">
+          <button class="lib-tab" type="button" aria-pressed="true" data-cat="">全部</button>
+        </div>
+        <input class="filter-input lib-search" type="search" placeholder="搜索标题或关键词" aria-label="搜索资料">
       </div>
+      <!-- 卡片容器：四种状态（加载/空/出错/正常）由 app.js 切换 -->
+      <div class="card-grid" id="lib-grid" data-state="loading" aria-live="polite"></div>
+    </section>
 
-      <div class="feature-grid">
-        <a class="feature-card feature-card-link" href="library.html">
-          <span class="status">已开放</span>
-          <h3>资料库</h3>
-          <p>往届国奖作品合集、赛题与器件资料。</p>
-          <span class="card-enter">进入资料库 →</span>
-        </a>
+    <!-- ============ 视图二：资料详情（默认隐藏，地址带 #item=编号 时显示） ============ -->
+    <section class="lib-detail-view" aria-label="资料详情" hidden>
+      <article class="lib-detail">
+        <p class="lib-detail-meta">
+          <span class="lib-tag"></span>
+          <span class="lib-year"></span>
+        </p>
+        <h2 class="lib-detail-title"></h2>
+        <p class="lib-detail-summary"></p>
 
-        <div class="feature-card off">
-          <span class="status">建设中 · 即将开放</span>
-          <h3>资源导航</h3>
-          <p>仿真工具、EDA 软件等官网链接，按用途分组。</p>
+        <div class="lib-placeholder">
+          <p class="state-title">资料全文还在整理</p>
+          <p>先把标题与摘要放出来，方便你判断是否需要；正文与附件会在整理完成后补上。</p>
         </div>
 
-        <div class="feature-card off">
-          <span class="status">建设中 · 即将开放</span>
-          <h3>Skill 下载</h3>
-          <p>电赛备赛 skill，附使用指引，可复制可下载。</p>
-        </div>
-      </div>
-
-      <!-- 筛选无结果提示（默认隐藏，app.js 控制） -->
-      <div class="state-box filter-empty" hidden>
-        <p class="state-title">没有找到相关内容</p>
-        <p>换个关键词试试，或清空筛选查看全部。</p>
-        <button class="btn-retry filter-clear" type="button">查看全部</button>
-      </div>
-
-      <p class="notice">
-        资料库已经可以进去看，其余功能还在建设中，稳定一个开放一个。
-      </p>
+        <!-- 余力加练：返回上一级视图（清掉地址里的 #item=编号） -->
+        <a class="btn-retry lib-back" href="#library-app">← 返回资料列表</a>
+      </article>
     </section>
 
   </main>
@@ -109,16 +106,16 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <p class="footer-logo">magic<span>-hub</span></p>
-        <p class="footer-note">电子设计区 · 演示版</p>
+        <p class="footer-note">数学建模区 · 演示版</p>
       </div>
       <div class="footer-col">
         <p class="footer-head">本区</p>
-        <a href="index.html">电子设计区首页</a>
-        <a href="../index.html">网站首页</a>
+        <a href="index.html">数学建模区首页</a>
+        <a href="library.html">数模资料库</a>
       </div>
       <div class="footer-col">
         <p class="footer-head">说明</p>
-        <span>功能建设中，陆续开放</span>
+        <a href="../index.html">网站首页</a>
         <span>内容会陆续补充</span>
       </div>
       <div class="footer-col">
@@ -129,6 +126,7 @@
     </div>
   </footer>
 
+  <script src="../mock-data.js"></script>
   <script src="../app.js"></script>
 </body>
 </html>
