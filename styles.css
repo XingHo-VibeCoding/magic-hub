@@ -1009,8 +1009,6 @@ button:focus-visible {
 /* 比分区页更矮的 Hero：任务页不必占满一屏，只要给顶栏一个透明过渡背景 */
 .auth-hero { min-height: 38vh; }
 .auth-hero .hero-inner { padding-bottom: 56px; }
-.auth-hero .hero-sub { margin-bottom: 0; }
-
 .auth-main { padding-top: 56px; padding-bottom: var(--space-section); }
 
 .auth-card {
@@ -1023,8 +1021,6 @@ button:focus-visible {
   box-shadow: 0 12px 34px rgba(34, 27, 40, 0.07);
 }
 .auth-title { font-size: 22px; font-weight: 700; color: var(--text); }
-.auth-lead { font-size: 13.5px; color: var(--text-mute); margin: 6px 0 24px; }
-
 .auth-form { display: flex; flex-direction: column; gap: 16px; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field > label { font-size: 13px; font-weight: 600; color: var(--text-soft); }

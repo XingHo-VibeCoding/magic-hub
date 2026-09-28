@@ -51,33 +51,31 @@
     <div class="hero-inner">
       <p class="hero-tag">会员中心</p>
       <h1 class="hero-title">登录</h1>
-      <p class="hero-sub">登录后可以保存收藏、上传自己的资料，并与官方发布的内容分开管理。</p>
     </div>
   </section>
 
   <main class="wrap auth-main">
     <div class="auth-card">
       <h2 class="auth-title">用户登录</h2>
-      <p class="auth-lead">用邮箱和密码登录，收藏与上传记录会跟着账号走。</p>
 
       <!-- novalidate：关掉浏览器自带的提示气泡，改用页面里统一的错误说明 -->
       <form class="auth-form" data-auth="login" novalidate>
         <div class="field">
-          <label for="lg-email">邮箱 <span class="req">*</span></label>
+          <label for="lg-email"><span class="req">*</span> 邮箱</label>
           <input class="filter-input form-input" id="lg-email" name="email" type="email" data-rule="email"
                  placeholder="name@example.com" autocomplete="email">
           <p class="field-error" data-error="email" hidden></p>
         </div>
 
         <div class="field">
-          <label for="lg-password">密码 <span class="req">*</span></label>
+          <label for="lg-password"><span class="req">*</span> 密码</label>
           <input class="filter-input form-input" id="lg-password" name="password" type="password" data-rule="password"
                  placeholder="请输入密码" autocomplete="current-password">
           <p class="field-error" data-error="password" hidden></p>
         </div>
 
         <div class="field">
-          <label for="lg-captcha">验证码 <span class="req">*</span></label>
+          <label for="lg-captcha"><span class="req">*</span> 验证码</label>
           <div class="captcha-row">
             <input class="filter-input form-input" id="lg-captcha" name="captcha" type="text" data-rule="captcha"
                    placeholder="照抄右侧 4 个字符" autocomplete="off" maxlength="4">
@@ -93,7 +91,7 @@
       </form>
 
       <div class="auth-foot">
-        <span>还没账号？<a href="register.html">注册</a></span>
+        <span>还没账号？ <a href="register.html">注册</a></span>
         <button class="auth-link" type="button" data-soon="密码重置会在账号系统接入后开放">忘记密码</button>
       </div>
     </div>

@@ -49,25 +49,23 @@
     <div class="hero-inner">
       <p class="hero-tag">会员中心</p>
       <h1 class="hero-title">注册</h1>
-      <p class="hero-sub">注册后你上传的资料只有自己可见，官方发布的资料全站共享。</p>
     </div>
   </section>
 
   <main class="wrap auth-main">
     <div class="auth-card">
       <h2 class="auth-title">注册账号</h2>
-      <p class="auth-lead">带 * 的是必填项，填错的地方会当场提示改法。</p>
 
       <form class="auth-form" data-auth="register" novalidate>
         <div class="field">
-          <label for="rg-email">邮箱 <span class="req">*</span></label>
+          <label for="rg-email"><span class="req">*</span> 邮箱</label>
           <input class="filter-input form-input" id="rg-email" name="email" type="email" data-rule="email"
                  placeholder="name@example.com" autocomplete="email">
           <p class="field-error" data-error="email" hidden></p>
         </div>
 
         <div class="field">
-          <label for="rg-username">用户名 <span class="req">*</span></label>
+          <label for="rg-username"><span class="req">*</span> 用户名</label>
           <input class="filter-input form-input" id="rg-username" name="username" type="text" data-rule="username"
                  placeholder="3-16 位字母、数字或下划线" autocomplete="username">
           <p class="field-error" data-error="username" hidden></p>
@@ -75,29 +73,29 @@
 
         <div class="field-row">
           <div class="field">
-            <label for="rg-password">设置密码 <span class="req">*</span></label>
+            <label for="rg-password"><span class="req">*</span> 设置密码</label>
             <input class="filter-input form-input" id="rg-password" name="password" type="password" data-rule="password"
                    placeholder="至少 8 位" autocomplete="new-password">
             <p class="field-error" data-error="password" hidden></p>
           </div>
           <div class="field">
-            <label for="rg-confirm">确认密码 <span class="req">*</span></label>
+            <label for="rg-confirm"><span class="req">*</span> 确认密码</label>
             <input class="filter-input form-input" id="rg-confirm" name="confirm" type="password" data-rule="confirm"
                    placeholder="再输一次" autocomplete="new-password">
             <p class="field-error" data-error="confirm" hidden></p>
           </div>
         </div>
-        <p class="field-help">密码至少 8 位，且同时包含字母和数字。</p>
+        <p class="field-help">密码由 8 位以上字符组成，区分大小写，需同时包含字母和数字。</p>
 
         <div class="field-row">
           <div class="field">
-            <label for="rg-school">所在院校 <span class="req">*</span></label>
+            <label for="rg-school"><span class="req">*</span> 所在院校</label>
             <input class="filter-input form-input" id="rg-school" name="school" type="text" data-rule="school"
                    placeholder="例如：武汉大学">
             <p class="field-error" data-error="school" hidden></p>
           </div>
           <div class="field">
-            <label for="rg-identity">身份 <span class="req">*</span></label>
+            <label for="rg-identity"><span class="req">*</span> 身份</label>
             <select class="filter-select form-select" id="rg-identity" name="identity" data-rule="identity">
               <option value="">请选择</option>
               <option value="undergrad">本科生</option>
@@ -123,18 +121,18 @@
         <div class="field">
           <label class="check-row" for="rg-agree">
             <input id="rg-agree" name="agree" type="checkbox" data-rule="agree">
-            <span>我已阅读并同意《用户协议》与《隐私政策》，并了解自己上传的资料只有本人可见。</span>
+            <span>我已阅读并同意本站的《用户协议》与《隐私政策》。</span>
           </label>
           <p class="field-error" data-error="agree" hidden></p>
         </div>
 
-        <button class="btn-retry btn-auth" type="submit">注 册</button>
+        <button class="btn-retry btn-auth" type="submit">确 定</button>
 
         <p class="auth-result" role="status" hidden></p>
       </form>
 
       <div class="auth-foot">
-        <span>已有账号？<a href="login.html">登录</a></span>
+        <span>已有账号？ <a href="login.html">登录</a></span>
       </div>
     </div>
   </main>
