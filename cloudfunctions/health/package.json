@@ -1,0 +1,7 @@
+{
+  "name": "health",
+  "version": "1.0.0",
+  "description": "magic-hub 健康检查接口（Day 15，不连数据库）",
+  "main": "index.js",
+  "dependencies": {}
+}
