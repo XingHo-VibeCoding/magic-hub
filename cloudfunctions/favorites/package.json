@@ -1,0 +1,9 @@
+{
+  "name": "favorites",
+  "version": "1.0.0",
+  "description": "GET /api/favorites —— 收藏列表；Day 18 增加 POST 写入",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.18.1"
+  }
+}

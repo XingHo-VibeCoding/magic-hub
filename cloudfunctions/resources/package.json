@@ -1,0 +1,9 @@
+{
+  "name": "resources",
+  "version": "1.0.0",
+  "description": "GET /api/resources —— 资料列表，支持分区/类别/关键词筛选",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.18.1"
+  }
+}
