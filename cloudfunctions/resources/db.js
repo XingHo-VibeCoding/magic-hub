@@ -1,45 +1,38 @@
 /**
- * 数据访问层 —— resources 表（Day 17）
+ * 数据访问层 —— resources 表（Day 17 建；Day 19 抽出共享连接层后瘦身）
  *
  * 这个文件只负责「怎么把数据取出来」，不关心 HTTP、参数校验和错误码。
  * 上层 index.js 负责那些。
  *
- * 注意：getRdb() 这段与 favorites/db.js 里的完全一样，改一处就要改另一处，
- * 等 Day 19 会把它们抽成共享模块，现在先不提前做。
+ * 连接相关的代码（getRdb 等）在 Day 19 已搬到 _shared/rdb.js，
+ * 这里不再自己建连接，只引用。
  */
 
-const ENV_ID = process.env.TCB_ENV || 'magic-hub-d7gt99c7waafb07ad';
-
-let _rdb = null;
-
 /**
- * 拿到数据库对象。云函数里 SDK 走平台内部通道，不需要主机/端口/密码。
+ * 加载共享模块。
  *
- * 为什么必须传 { database: 'public' }（Day 17 排错实测所得）：
- * @cloudbase/node-sdk 的 dist/cloudbase.js 里是这样写的——
- *   const { instance = 'default', database = envId } = options || {}
- *   headers: { 'Accept-Profile': database, 'Content-Profile': database }
- * 也就是说「database」这个参数实际被当成 PostgREST 用来选 schema 的 header，
- * 而且它的**默认值就是环境 ID**。而 CloudBase 的 PostgreSQL REST API 只支持
- * public schema，于是默认写法必然报：
- *   DATABASE_PGRST106  Invalid schema: magic-hub-d7gt99c7waafb07ad
- * 显式写 public 才能命中我们建表所在的 schema。别把这个参数删掉。
+ * 为什么要试两个路径：仓库里的布局是 cloudfunctions/_shared/rdb.js，
+ * 对本文件来说是「上一级目录」（../_shared/rdb）；而 CloudBase 是**每个云函数
+ * 各打一个 zip 单独上传**，打包时 _shared 会被复制到 zip 里、和 db.js 同级，
+ * 那时路径就变成 ./_shared/rdb。两种布局都在用，所以按顺序各试一次。
+ *
+ * 只吞「找不到模块」这一种错，模块里的其它错误照常往上抛，免得真出错被藏起来。
  */
-function getRdb() {
-  if (_rdb) return _rdb;
-  const cloudbase = require('@cloudbase/node-sdk');
-  const app = cloudbase.init({ env: ENV_ID });
-  _rdb = app.rdb({ database: 'public' });
-  return _rdb;
+function requireShared() {
+  const candidates = ['../_shared/rdb', './_shared/rdb'];
+  for (const p of candidates) {
+    try {
+      return require(p);
+    } catch (e) {
+      if (!e || e.code !== 'MODULE_NOT_FOUND') throw e;
+    }
+  }
+  throw new Error('找不到共享模块 _shared/rdb.js');
 }
 
-/**
- * 仅供本地测试用：注入一个假的数据库对象，这样不连真库也能验证排序、筛选、拼接逻辑。
- * 部署到云上不会调用它。
- */
-function setRdb(rdb) {
-  _rdb = rdb;
-}
+const shared = requireShared();
+const getRdb = shared.getRdb;
+const setRdb = shared.setRdb;
 
 /**
  * 查资料列表。

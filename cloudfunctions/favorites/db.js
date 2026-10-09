@@ -1,38 +1,40 @@
 /**
- * 数据访问层 —— favorites 表（Day 17 读接口；Day 18 会在这里加写入方法）
+ * 数据访问层 —— favorites 表（Day 17 读接口；Day 18 写入；Day 19 抽出共享连接层后瘦身）
  *
- * 注意：getRdb() 这段与 resources/db.js 里的完全一样，改一处就要改另一处。
+ * 这个文件只负责「怎么读写 favorites 表」，不关心 HTTP、参数校验和错误码。
+ * 上层 index.js 负责那些。
+ *
+ * 连接相关的代码（getRdb）和通用错误工具（describeError / throwKind /
+ * isUniqueViolation）在 Day 19 已搬到 _shared/rdb.js，这里不再各存一份。
  */
-
-const ENV_ID = process.env.TCB_ENV || 'magic-hub-d7gt99c7waafb07ad';
-
-let _rdb = null;
 
 /**
- * 拿到数据库对象。云函数里 SDK 走平台内部通道，不需要主机/端口/密码。
+ * 加载共享模块。
  *
- * 为什么必须传 { database: 'public' }（Day 17 排错实测所得）：
- * @cloudbase/node-sdk 的 dist/cloudbase.js 里是这样写的——
- *   const { instance = 'default', database = envId } = options || {}
- *   headers: { 'Accept-Profile': database, 'Content-Profile': database }
- * 也就是说「database」这个参数实际被当成 PostgREST 用来选 schema 的 header，
- * 而且它的**默认值就是环境 ID**。而 CloudBase 的 PostgreSQL REST API 只支持
- * public schema，于是默认写法必然报：
- *   DATABASE_PGRST106  Invalid schema: magic-hub-d7gt99c7waafb07ad
- * 显式写 public 才能命中我们建表所在的 schema。别把这个参数删掉。
+ * 为什么要试两个路径：仓库里的布局是 cloudfunctions/_shared/rdb.js，
+ * 对本文件来说是「上一级目录」（../_shared/rdb）；而 CloudBase 是**每个云函数
+ * 各打一个 zip 单独上传**，打包时 _shared 会被复制到 zip 里、和 db.js 同级，
+ * 那时路径就变成 ./_shared/rdb。两种布局都在用，所以按顺序各试一次。
+ *
+ * 只吞「找不到模块」这一种错，模块里的其它错误照常往上抛，免得真出错被藏起来。
  */
-function getRdb() {
-  if (_rdb) return _rdb;
-  const cloudbase = require('@cloudbase/node-sdk');
-  const app = cloudbase.init({ env: ENV_ID });
-  _rdb = app.rdb({ database: 'public' });
-  return _rdb;
+function requireShared() {
+  const candidates = ['../_shared/rdb', './_shared/rdb'];
+  for (const p of candidates) {
+    try {
+      return require(p);
+    } catch (e) {
+      if (!e || e.code !== 'MODULE_NOT_FOUND') throw e;
+    }
+  }
+  throw new Error('找不到共享模块 _shared/rdb.js');
 }
 
-/** 仅供本地测试：注入假的数据库对象。 */
-function setRdb(rdb) {
-  _rdb = rdb;
-}
+const shared = requireShared();
+const getRdb = shared.getRdb;
+const setRdb = shared.setRdb;
+const throwKind = shared.throwKind;
+const isUniqueViolation = shared.isUniqueViolation;
 
 /**
  * 查收藏列表，顺带把资料标题和分区一起取回来，
@@ -73,25 +75,6 @@ async function queryFavorites({ limit }) {
     zone: byId[f.resource_id] ? byId[f.resource_id].zone : '',
     created_at: f.created_at,
   }));
-}
-
-/**
- * 把 PostgREST 风格的错误对象拼成一句话，只用于内部日志（不返回给前端）。
- * 前端永远只拿中文 message，英文原始错误不出去。
- */
-function describeError(error) {
-  if (!error) return '未知错误';
-  return [error.message, error.code, error.details].filter(Boolean).join(' | ');
-}
-
-/**
- * 抛一个带 kind 的错误，让上层能区分「重复」和「别的数据库故障」。
- * kind 取值：DUPLICATE / DB
- */
-function throwKind(kind, message, error) {
-  const err = new Error(message + (error ? '：' + describeError(error) : ''));
-  err.kind = kind;
-  throw err;
 }
 
 /**
@@ -136,17 +119,6 @@ async function insertFavorite(resourceId) {
   if (!row) throwKind('DB', '写入成功但没有返回记录', null);
 
   return { id: row.id, resource_id: row.resource_id, created_at: row.created_at };
-}
-
-/**
- * 判定「是不是重复」：PostgreSQL 唯一约束冲突（SQLSTATE 23505）。
- * 多路判定是因为 SDK 不同版本可能只给 message、也可能给结构化 code，两条都认，
- * 避免线上换版本后突然认不出来，把「重复」当成「数据库故障」报出去。
- */
-function isUniqueViolation(error) {
-  if (String(error.code) === '23505') return true;
-  const msg = String(error.message || '') + ' ' + String(error.details || '');
-  return /duplicate key/i.test(msg) || /unique constraint/i.test(msg);
 }
 
 module.exports = { queryFavorites, resourceExists, insertFavorite, setRdb, getRdb };
