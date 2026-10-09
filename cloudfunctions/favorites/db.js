@@ -75,4 +75,78 @@ async function queryFavorites({ limit }) {
   }));
 }
 
-module.exports = { queryFavorites, setRdb, getRdb };
+/**
+ * 把 PostgREST 风格的错误对象拼成一句话，只用于内部日志（不返回给前端）。
+ * 前端永远只拿中文 message，英文原始错误不出去。
+ */
+function describeError(error) {
+  if (!error) return '未知错误';
+  return [error.message, error.code, error.details].filter(Boolean).join(' | ');
+}
+
+/**
+ * 抛一个带 kind 的错误，让上层能区分「重复」和「别的数据库故障」。
+ * kind 取值：DUPLICATE / DB
+ */
+function throwKind(kind, message, error) {
+  const err = new Error(message + (error ? '：' + describeError(error) : ''));
+  err.kind = kind;
+  throw err;
+}
+
+/**
+ * 判断一条资料是否真实存在（Day 18：写收藏前必须先确认 id 有效，
+ * 否则外键会直接报错，而我们想给前端的是「这条资料不存在」这句人话）。
+ */
+async function resourceExists(resourceId) {
+  const { data, error } = await getRdb()
+    .from('resources')
+    .select('id')
+    .eq('id', resourceId)
+    .limit(1);
+
+  if (error) throwKind('DB', '查询 resources 失败', error);
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * 写入一条收藏。
+ *
+ * 防重复的做法（契约 3.4 写死）：靠 favorites(resource_id) 上的数据库唯一约束兜底，
+ * 不做「先查一次再插入」。理由是并发下两次请求可能同时查到「没有」，然后都插进去，
+ * 那时就跟没防一样。这里的做法是：直接插，数据库说重复就认。
+ *
+ * @param {number} resourceId
+ * @returns {Promise<{id:number, resource_id:number, created_at:string}>}
+ */
+async function insertFavorite(resourceId) {
+  const { data, error } = await getRdb()
+    .from('favorites')
+    .insert({ resource_id: resourceId })
+    .select('id,resource_id,created_at');
+
+  if (error) {
+    if (isUniqueViolation(error)) {
+      throwKind('DUPLICATE', '插入收藏撞上唯一约束', error);
+    }
+    throwKind('DB', '写入 favorites 失败', error);
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throwKind('DB', '写入成功但没有返回记录', null);
+
+  return { id: row.id, resource_id: row.resource_id, created_at: row.created_at };
+}
+
+/**
+ * 判定「是不是重复」：PostgreSQL 唯一约束冲突（SQLSTATE 23505）。
+ * 多路判定是因为 SDK 不同版本可能只给 message、也可能给结构化 code，两条都认，
+ * 避免线上换版本后突然认不出来，把「重复」当成「数据库故障」报出去。
+ */
+function isUniqueViolation(error) {
+  if (String(error.code) === '23505') return true;
+  const msg = String(error.message || '') + ' ' + String(error.details || '');
+  return /duplicate key/i.test(msg) || /unique constraint/i.test(msg);
+}
+
+module.exports = { queryFavorites, resourceExists, insertFavorite, setRdb, getRdb };

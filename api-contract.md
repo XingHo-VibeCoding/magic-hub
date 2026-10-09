@@ -72,9 +72,9 @@ CloudBase 的 HTTP 访问服务对云函数的返回做统一包装，**所有�
 | # | 方法 | 路径 | 作用 | 计划实现日 | 当前状态 |
 | --- | --- | --- | --- | --- | --- |
 | 1 | GET | `/api/health` | 健康检查，不连数据库 | Day 15 | ✅ 已实现并上线 |
-| 2 | GET | `/api/resources` | 资料列表（可按分区/类别/关键词筛选） | Day 17 | 代码完成，待部署验证 |
-| 3 | GET | `/api/favorites` | 收藏列表 | Day 17 | 代码完成，待部署验证 |
-| 4 | POST | `/api/favorites` | 新增一条收藏（含校验 + 防重复） | Day 18 | 未实现 |
+| 2 | GET | `/api/resources` | 资料列表（可按分区/类别/关键词筛选） | Day 17 | ✅ 已实现并上线 |
+| 3 | GET | `/api/favorites` | 收藏列表 | Day 17 | ✅ 已实现并上线 |
+| 4 | POST | `/api/favorites` | 新增一条收藏（含校验 + 防重复） | Day 18 | 代码完成，待部署验证 |
 
 **已上线的公网地址**（环境 `magic-hub-d7gt99c7waafb07ad`）：
 
@@ -289,3 +289,5 @@ https://magic-hub-d7gt99c7waafb07ad-1501395198.ap-shanghai.app.tcloudbase.com/ap
 | 2026-10-07 | 初版：登记 4 个接口 + 两张表的字段，供 Day 16–20 使用 | 全部 |
 | 2026-10-08 | 连接方式改为 CloudBase SDK 内部通道（`app.rdb()`），不再用 pg 驱动直连；补记 HTTP 状态码的实际行为（统一 200）；`health` 标记已上线 | 全部 |
 | 2026-10-08 | 新增 1.3：记录免费版云函数「超时 3 秒 / 内存不可调 / 冷启动 2.2–4.3 秒」三个硬限制，以及定时预热方案与实测效果；明确 Day 20 前端必须加失败重试 | resources、favorites |
+| 2026-10-08 | `GET /api/resources`、`GET /api/favorites` 标记已上线 | #2、#3 |
+| 2026-10-08 | POST 落到同一个 `favorites` 云函数（用 `httpMethod` 分流），不新建函数、路由路径不变；请求体支持 base64 编码（`isBase64Encoded` 由网关决定） | #4 |
