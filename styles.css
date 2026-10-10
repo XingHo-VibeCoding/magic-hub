@@ -482,6 +482,15 @@ body {
   color: var(--text-mute);
   margin: -14px 0 18px;
 }
+/* 数据最后更新时间（Day 20 加练）：一行小字，说明页面上数据的新鲜程度 */
+.update-note {
+  font-size: 13px;
+  color: var(--text-mute);
+  margin: 22px 0 -6px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent, #910782);
+}
+
 /* 悬停：浮起 + 紫色大阴影 + 封面条轻微拉伸（仿参考站卡片动效） */
 .card:hover {
   transform: translateY(-4px);

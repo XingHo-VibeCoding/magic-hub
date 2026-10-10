@@ -57,6 +57,9 @@
 
   <main>
 
+    <!-- 最新收录时间：云端数据有没有变化，刷新一眼能看出来（文字由 app.js 填） -->
+    <p class="update-note" id="update-note" hidden><span></span></p>
+
     <!-- ============ 正题 · 主题一：数学建模 ============ -->
     <section class="zone" id="zone-shumo">
       <div class="zone-head">
@@ -66,7 +69,7 @@
         </div>
         <a class="zone-enter" href="shumo/index.html">进入数模区 →</a>
       </div>
-      <p class="zone-note">以下为演示内容，点「查看详情」可打开该条资料。</p>
+      <p class="zone-note">以下资料来自云端数据库，点「查看详情」可打开该条资料。</p>
       <!-- 搜索筛选：输入关键词或选类别，只显示匹配内容（Day 12） -->
       <div class="filter-bar" data-zone="shumo">
         <input class="filter-input" type="search" placeholder="搜索标题、类型或关键词" aria-label="搜索数学建模内容">
@@ -87,7 +90,7 @@
         </div>
         <a class="zone-enter" href="edian/index.html">进入电赛区 →</a>
       </div>
-      <p class="zone-note">以下为演示内容，点「查看详情」可打开该条资料。</p>
+      <p class="zone-note">以下资料来自云端数据库，点「查看详情」可打开该条资料。</p>
       <div class="filter-bar" data-zone="edian">
         <input class="filter-input" type="search" placeholder="搜索标题、类型或关键词" aria-label="搜索电子设计内容">
         <select class="filter-select" aria-label="按类型筛选">
@@ -125,6 +128,7 @@
   </footer>
 
   <script src="mock-data.js"></script>
+  <script src="api.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

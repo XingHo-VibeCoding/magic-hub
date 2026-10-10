@@ -18,6 +18,9 @@
  *      加载中骨架屏 / 库里没内容（空）/ 加载失败（说清+真重试）/ 正常卡片。
  *   9. 会员中心（Day 13 板块④）：登录 / 注册表单的前端校验——必填、邮箱格式、密码强度、
  *      两次密码一致、验证码、协议勾选；通过后如实说明"账号系统接入后端才能用"，不做假登录。
+ *  10. 真实接口接线（Day 20）：数据改从云端接口取（api.js），本地预览才用示例数据；
+ *      取数期间显示骨架屏，失败给错误态 + 真重试（不看演示参数）；
+ *      收藏按钮真的写数据库；页面显示「数据最后更新」时间。
  */
 
 (function () {
@@ -65,7 +68,7 @@
     el.querySelector(".btn-retry").addEventListener("click", function () {
       // 重试 = 直接重新尝试加载数据（不看演示参数，否则 ?state=error 下会永远重试到错误）
       if (onRetry) { onRetry(); return; }
-      var list = (window.MOCK_DATA || {})[zoneKey];
+      var list = fullList(zoneKey);
       if (list && list.length) renderSuccess(el, list, zoneKey);
       else renderEmpty(el);
     });
@@ -83,14 +86,14 @@
   // detailPath 传了才加「查看详情」链接（资料库页自己不需要再链回自己）
   function renderCards(el, list, zoneKey, detailPath) {
     el.innerHTML = "";
-    var fullList = (window.MOCK_DATA || {})[zoneKey] || [];
+    var all = fullList(zoneKey);
     list.forEach(function (item) {
       var card = document.createElement("article");
       card.className = "card";
-      // 收藏状态的记忆键用标题：筛选后卡片顺序会变，序号键会让收藏错位
-      var cardKey = zoneKey + "-" + item.title;
+      // 收藏记忆键：云端数据有 id 就用 id（唯一且稳定），示例数据没有 id 才退回标题
+      var cardKey = zoneKey + "-" + (item.id != null ? item.id : item.title);
       // 详情链接用「在完整数据里的位置」：筛选后的子集序号会指错资料
-      var fullIndex = fullList.indexOf(item);
+      var fullIndex = all.indexOf(item);
       card.innerHTML =
         '<div class="card-thumb" aria-hidden="true"></div>' +
         '<div class="card-body">' +
@@ -133,19 +136,42 @@
     });
   }
 
-  // 渲染一个主题区块：根据网址参数决定演示哪种状态
+  // 渲染一个主题区块：先骨架屏 → 取数据 → 成功 / 空 / 出错。
+  // 演示参数（?state=loading/empty/error）仍然优先，方便随时回看四种状态。
   function renderZone(zoneKey) {
     var el = document.getElementById(zoneKey + "-grid");
     if (!el) return;
-    var list = (window.MOCK_DATA || {})[zoneKey];
 
     var demo = new URLSearchParams(window.location.search).get("state");
     if (demo === "loading") { renderSkeleton(el, 3); return; }
     if (demo === "empty")   { renderEmpty(el); return; }
-    if (demo === "error")   { renderError(el, zoneKey); return; }
+    if (demo === "error")   { renderError(el, zoneKey, function () { loadZone(zoneKey); }); return; }
+    loadZone(zoneKey);
+  }
 
-    if (!list || !list.length) { renderEmpty(el); return; }   // 数据缺失 → 空态兜底
+  // 真正取数据并渲染（错误态的「重新加载」也走这里）
+  function loadZone(zoneKey) {
+    var el = document.getElementById(zoneKey + "-grid");
+    // 本地预览：示例数据本来就在内存里，没有"在路上"这回事，直接画（也省掉骨架屏一闪）
+    if (useSampleData()) { paintZone(zoneKey, el, fullList(zoneKey)); return; }
+    renderSkeleton(el, 3);                        // 数据在路上：先占位，不留白
+    loadZoneData(zoneKey).then(function (list) {
+      paintZone(zoneKey, el, list);
+    }).catch(function () {
+      renderError(el, zoneKey, function () {
+        pending[zoneKey] = null;                  // 失败的那次不能复用，重试要真再发一次请求
+        loadZone(zoneKey);
+      });
+    });
+  }
+
+  // 把一个区的数据画出来：本地直出和云端取回都走这里，行为永远一致
+  function paintZone(zoneKey, el, list) {
+    if (!list || !list.length) { renderEmpty(el); return; }
     renderSuccess(el, list, zoneKey);
+    fillCategoryOptions(zoneKey);                 // 类别下拉依赖数据，数据到了才填
+    redraw[zoneKey] = function () { renderSuccess(el, fullList(zoneKey), zoneKey); };
+    renderUpdatedAt();
   }
 
   /* ---------- 顶栏滚动变色（透明 → 白） ---------- */
@@ -185,8 +211,97 @@
 
   /* ---------- 交互反馈：toast 提示条 + 收藏 / 复制链接（Day 11） ---------- */
 
-  // 收藏状态存在内存里：刷新就清空 —— 还没有数据库，如实反馈，不假装"已保存"
+  // 收藏状态存在内存里：本地预览（示例数据）下刷新就清空 —— 没有后端，如实反馈
   var favorites = new Set();
+
+  /* ---------- 数据来源：云端接口（线上） / 本地示例数据（本地预览） ---------- */
+
+  var DATA = { shumo: [], edian: [] };       // 云端取回的数据缓存：筛选、搜索、资料库共用这一份
+  var FAV_IDS = null;                        // 已收藏的资料 id 集合（null = 还没取到）
+  var pending = { shumo: null, edian: null };// 同一个区只发一次请求，多处同时要数据也共用同一次
+  var redraw = { shumo: null, edian: null, lib: null }; // 收藏状态取到后，用这些函数补画卡片
+
+  function api() { return window.MagicAPI || null; }
+
+  // 本地预览不在云端跨域白名单里，硬请求必被浏览器拦掉 → 这些场景继续用示例数据
+  function useSampleData() {
+    var a = api();
+    return !a || a.isLocal;
+  }
+
+  // 统一的数据出口：云端数据到了就用云端的，否则退回示例数据（不会白屏）
+  function fullList(zoneKey) {
+    if (DATA[zoneKey] && DATA[zoneKey].length) return DATA[zoneKey];
+    return ((window.MOCK_DATA || {})[zoneKey]) || [];
+  }
+
+  // 取一个区的数据：第一次真发请求，之后复用同一个 Promise（不重复打接口）
+  function loadZoneData(zoneKey) {
+    if (pending[zoneKey]) return pending[zoneKey];
+    var p;
+    if (useSampleData()) {
+      p = Promise.resolve(fullList(zoneKey));
+    } else {
+      p = api()
+        .getResources({ zone: zoneKey, limit: 50 })
+        .then(function (res) {
+          if (!res || res.ok !== true) {
+            throw new Error((res && res.message) || "接口没能返回数据");
+          }
+          DATA[zoneKey] = res.data || [];
+          return DATA[zoneKey];
+        });
+    }
+    pending[zoneKey] = p;
+    return p;
+  }
+
+  // 取收藏状态。取不到不影响看资料（静默失败，只标记 FAV_IDS 为 null）
+  function loadFavorites() {
+    if (useSampleData()) return Promise.resolve(null);
+    return api()
+      .getFavorites({ limit: 100 })
+      .then(function (res) {
+        FAV_IDS = new Set();
+        if (res && res.ok && res.data) {
+          res.data.forEach(function (f) { FAV_IDS.add(String(f.resource_id)); });
+        }
+        return FAV_IDS;
+      })
+      .catch(function () { FAV_IDS = null; return null; });
+  }
+
+  // 加练（Day 20）：显示数据最后更新时间 —— 库里数据有没有变，刷新一眼能看出来
+  function renderUpdatedAt() {
+    var el = document.getElementById("update-note");
+    if (!el) return;                       // 只有放了这个元素的页面才显示
+    var text = el.querySelector("span");
+
+    // 本地预览：示例数据没有"入库时间"这个概念，如实说明来源，不硬凑一个时间
+    if (useSampleData()) {
+      el.hidden = false;
+      if (text) text.textContent = "示例数据（本机预览，未连接云端）";
+      return;
+    }
+    // 云端：取所有资料里最新的 created_at（ISO 字符串可以直接比大小），
+    // 也就是"最近一条是什么时候收录的" —— 不是行修改时间，说法上不夸张。
+    var latest = "";
+    ["shumo", "edian"].forEach(function (z) {
+      fullList(z).forEach(function (it) {
+        if (it.created_at && String(it.created_at) > latest) latest = String(it.created_at);
+      });
+    });
+    var d = new Date(latest);
+    if (!latest || isNaN(d.getTime())) { el.hidden = true; return; }   // 没有时间字段就不硬凑
+    function pad(n) { return n < 10 ? "0" + n : String(n); }
+    el.hidden = false;
+    if (text) {
+      text.textContent =
+        "最新收录：" +
+        d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+        " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+    }
+  }
 
   // toast：页面底部弹出的小提示条。type 不传 = 成功（紫底），传 "error" = 失败（深红底）
   function showToast(message, type) {
@@ -217,30 +332,71 @@
     var favBtn = card.querySelector(".btn-fav");
     var copyBtn = card.querySelector(".btn-copy");
 
-    // 重渲染后恢复已收藏状态：状态存在 favorites 里，DOM 是新的，得重新对齐
-    // （只恢复外观，不弹 toast、不弹跳——那是点击瞬间的反馈）
-    if (favorites.has(cardKey)) {
-      favBtn.setAttribute("aria-pressed", "true");
-      favBtn.querySelector("span").textContent = "已收藏";
-    }
-
-    favBtn.addEventListener("click", function () {
-      var pressed = favBtn.getAttribute("aria-pressed") === "true";
-      if (pressed) {
-        favorites.delete(cardKey);
-        favBtn.setAttribute("aria-pressed", "false");
-        favBtn.querySelector("span").textContent = "收藏";
-        showToast("已取消收藏");
-      } else {
-        favorites.add(cardKey);
-        favBtn.setAttribute("aria-pressed", "true");
-        favBtn.querySelector("span").textContent = "已收藏";
-        showToast("已收藏");
+    // 外观与状态对齐的单一出口（点一下、重渲染后恢复，都走这里，不会两处写歪）
+    function setFaved(on, playPop) {
+      favBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      favBtn.querySelector("span").textContent = on ? "已收藏" : "收藏";
+      if (on && playPop) {
         // 重新触发弹跳动画：先摘掉动画类 → 强制浏览器重排 → 再挂回去
         favBtn.classList.remove("pop");
         void favBtn.offsetWidth;
         favBtn.classList.add("pop");
       }
+    }
+
+    // 重渲染后恢复已收藏状态：本地看 favorites 内存，线上看云端收藏 id 集合
+    var faved =
+      favorites.has(cardKey) ||
+      (FAV_IDS != null && item.id != null && FAV_IDS.has(String(item.id)));
+    if (faved) setFaved(true, false);   // 只恢复外观，不弹提示、不弹跳
+
+    favBtn.addEventListener("click", function () {
+      var pressed = favBtn.getAttribute("aria-pressed") === "true";
+
+      // 本地预览（示例数据）：沿用内存收藏，刷新清空 —— 如实反馈，不假装保存
+      if (useSampleData()) {
+        if (pressed) {
+          favorites.delete(cardKey);
+          setFaved(false, false);
+          showToast("已取消收藏");
+        } else {
+          favorites.add(cardKey);
+          setFaved(true, true);
+          showToast("已收藏（本地示例，刷新后清空）");
+        }
+        return;
+      }
+
+      // 线上：真的写数据库
+      if (pressed) {
+        // 取消收藏要后端 DELETE 接口（还没做）——如实说明，不做假动作
+        showToast("取消收藏功能还在建设中，暂时只支持收藏");
+        return;
+      }
+      if (item.id == null) {
+        showToast("这条内容还没有编号，暂时收藏不了", "error");
+        return;
+      }
+      api()
+        .addFavorite(item.id)
+        .then(function (res) {
+          if (res && res.ok) {
+            setFaved(true, true);
+            if (FAV_IDS) FAV_IDS.add(String(item.id));
+            showToast("已收藏，刷新后仍然保留");
+            return;
+          }
+          if (res && res.code === "DUPLICATE") {   // 别人/自己已经收藏过：状态对齐即可
+            setFaved(true, false);
+            if (FAV_IDS) FAV_IDS.add(String(item.id));
+            showToast("这条资料已经收藏过了");
+            return;
+          }
+          showToast((res && res.message) || "收藏失败，请稍后再试", "error");
+        })
+        .catch(function () {
+          showToast("网络不通，这次收藏没有保存", "error");
+        });
     });
 
     copyBtn.addEventListener("click", function () {
@@ -260,6 +416,24 @@
 
   /* ---------- 搜索筛选（Day 12）：关键词 + 类别 → 只显示匹配内容 ---------- */
 
+  // 类别下拉：数据加新类型，选项自动跟上，不用改代码。
+  // 只补还没有的选项（「全部类型」本来就在 HTML 里），重复调用也不会堆重复项。
+  function fillCategoryOptions(zoneKey) {
+    var bar = document.querySelector('.filter-bar[data-zone="' + zoneKey + '"]');
+    if (!bar) return;
+    var select = bar.querySelector(".filter-select");
+    if (!select) return;
+    var have = Array.prototype.map.call(select.options, function (o) { return o.value; });
+    fullList(zoneKey).forEach(function (item) {
+      if (!item.category || have.indexOf(item.category) >= 0) return;
+      have.push(item.category);
+      var opt = document.createElement("option");
+      opt.value = item.category;
+      opt.textContent = item.category;
+      select.appendChild(opt);
+    });
+  }
+
   // 首页两个主题区块的筛选：输入框 + 类别下拉（下拉选项从数据动态生成）
   function setupZoneFilter(zoneKey) {
     var bar = document.querySelector('.filter-bar[data-zone="' + zoneKey + '"]');
@@ -268,24 +442,14 @@
     var input = bar.querySelector(".filter-input");
     var select = bar.querySelector(".filter-select");
 
-    // 类别下拉动态生成：mock 数据加新类型，选项自动跟上，不用改代码
-    var cats = [];
-    (window.MOCK_DATA[zoneKey] || []).forEach(function (item) {
-      if (cats.indexOf(item.category) < 0) cats.push(item.category);
-    });
-    cats.forEach(function (c) {
-      var opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      select.appendChild(opt);
-    });
+    // 类别下拉由 fillCategoryOptions 填（数据从云端异步取，取到了才填得出来）
 
     function applyFilter() {
       // 演示态（?state=loading/empty/error）不抢戏：筛选只在正常成功态生效
       if (grid.getAttribute("data-state") !== "success") return;
       var kw = input.value.trim().toLowerCase();
       var cat = select.value;
-      var matched = (window.MOCK_DATA[zoneKey] || []).filter(function (item) {
+      var matched = fullList(zoneKey).filter(function (item) {
         var hay = (item.title + item.category + item.summary + item.year).toLowerCase();
         var hitCat = !cat || item.category === cat;
         var hitKw = !kw || hay.indexOf(kw) >= 0;
@@ -360,7 +524,7 @@
     var items = [];
     var zoneNames = { shumo: "数学建模", edian: "电子设计" };
     ["shumo", "edian"].forEach(function (zone) {
-      (((window.MOCK_DATA || {})[zone]) || []).forEach(function (item, idx) {
+      fullList(zone).forEach(function (item, idx) {
         items.push({
           zone: zone,
           index: idx,                                  // 在原数据里的位置：资料库页靠它直接展开详情
@@ -487,7 +651,7 @@
     var app = document.getElementById("library-app");
     if (!app) return;                                  // 不是资料库页就直接跳过
     var zoneKey = app.getAttribute("data-zone");
-    var list = (window.MOCK_DATA || {})[zoneKey] || [];
+    var list = [];                                     // 数据异步取回来后填（Day 20）
     var listView = app.querySelector(".lib-list-view");
     var detailView = app.querySelector(".lib-detail-view");
     var grid = document.getElementById("lib-grid");
@@ -499,20 +663,24 @@
     // 演示参数：和首页同一套机制（?state=loading/empty/error），不发明第二种
     var demo = new URLSearchParams(window.location.search).get("state");
 
-    // 分类标签从数据生成：以后加新类型不用改代码
-    var cats = [];
-    list.forEach(function (item) {
-      if (cats.indexOf(item.category) < 0) cats.push(item.category);
-    });
-    cats.forEach(function (c) {
-      var b = document.createElement("button");
-      b.className = "lib-tab";
-      b.type = "button";
-      b.setAttribute("aria-pressed", "false");        // 当前选中靠 aria 表达，键盘/读屏都认
-      b.setAttribute("data-cat", c);
-      b.textContent = c;
-      tabs.appendChild(b);
-    });
+    // 分类标签从数据生成：以后加新类型不用改代码。
+    // 只补没有的（「全部」本来就在 HTML 里），数据变了重复调用也不会堆重复标签。
+    function buildTabs() {
+      var have = Array.prototype.map.call(tabs.querySelectorAll(".lib-tab"), function (b) {
+        return b.getAttribute("data-cat");
+      });
+      list.forEach(function (item) {
+        if (!item.category || have.indexOf(item.category) >= 0) return;
+        have.push(item.category);
+        var b = document.createElement("button");
+        b.className = "lib-tab";
+        b.type = "button";
+        b.setAttribute("aria-pressed", "false");      // 当前选中靠 aria 表达，键盘/读屏都认
+        b.setAttribute("data-cat", item.category);
+        b.textContent = item.category;
+        tabs.appendChild(b);
+      });
+    }
 
     function matched() {
       return list.filter(function (item) {
@@ -619,8 +787,47 @@
     });
 
     window.addEventListener("hashchange", sync);
-    start();         // 四种状态：看 ?state= 演示参数决定，不带参数 = 正常列表
-    sync();          // 带 #item=编号 直接打开也能进详情（链接可分享）
+
+    // 先骨架屏 → 取云端数据 → 再决定显示哪种状态（演示参数优先）
+    function boot() {
+      if (demo === "loading") { renderSkeleton(grid, 6); sync(); return; }
+      if (demo === "empty")   { renderLibEmpty(); sync(); return; }
+      if (demo === "error")   {
+        // 重试 = 关掉演示参数重新走一遍（联网就重新取，本地就直接画）
+        renderError(grid, zoneKey, function () { demo = ""; boot(); });
+        sync();
+        return;
+      }
+      // 本地预览：示例数据在内存里，直接画，不用等
+      if (useSampleData()) {
+        list = fullList(zoneKey);
+        buildTabs();
+        start();
+        sync();
+        renderUpdatedAt();
+        return;
+      }
+      renderSkeleton(grid, 6);
+      loadZoneData(zoneKey).then(function (l) {
+        list = l || [];
+        buildTabs();
+        start();                 // 四种状态：不带 ?state= = 正常列表
+        sync();                  // 带 #item=编号 直接打开也能进详情（链接可分享）
+        renderUpdatedAt();
+      }).catch(function () {
+        list = [];
+        renderError(grid, zoneKey, function () {
+          pending[zoneKey] = null;                    // 重试要真再发一次请求
+          boot();
+        });
+        sync();
+      });
+    }
+
+    redraw.lib = function () {                        // 收藏状态取到后补画卡片
+      if (grid.getAttribute("data-state") === "success" && !demo) renderList();
+    };
+    boot();
   }
 
   /* ---------- 会员中心：登录 / 注册表单校验（Day 13 板块④） ---------- */
@@ -764,6 +971,10 @@
 
   renderZone("shumo");
   renderZone("edian");
+  // 收藏状态单独取：它慢也不拖慢首页（资料照样先出来），取到后补画一次卡片状态
+  loadFavorites().then(function () {
+    ["shumo", "edian", "lib"].forEach(function (k) { if (redraw[k]) redraw[k](); });
+  });
   setupTopbar();
   setupHeroBtn();
   setupZoneFilter("shumo");
