@@ -476,6 +476,18 @@ body {
   color: var(--text-soft);
   flex: 1;
 }
+/* 收藏备注（Day 22）：只在真写过备注时才显示（其余时候整行 hidden），
+   所以这里不写死高度；浅紫底 + 左侧色条，和上面的资料说明区分开 */
+.card-note {
+  font-size: 12.5px;
+  color: var(--text-soft);
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  padding: 6px 10px;
+  margin-top: 10px;
+  overflow-wrap: anywhere;      /* 长备注折行，不撑破卡片 */
+}
 /* 区块级说明：取代原先每张卡片都挂的"详情·建设中"标签（一处说清，不重复 12 次） */
 .zone-note {
   font-size: 13px;

@@ -92,6 +92,8 @@ CloudBase 的 HTTP 访问服务对云函数的返回做统一包装，**所有�
 | 2 | GET | `/api/resources` | 资料列表（可按分区/类别/关键词筛选） | Day 17 | ✅ 已实现并上线 |
 | 3 | GET | `/api/favorites` | 收藏列表 | Day 17 | ✅ 已实现并上线 |
 | 4 | POST | `/api/favorites` | 新增一条收藏（含校验 + 防重复） | Day 18 | ✅ 已实现并上线 |
+| 5 | PATCH | `/api/favorites/:id` | 改一条收藏的备注（含「改不存在的 id」防呆） | Day 22 | ✅ 已实现并上线 |
+| 6 | DELETE | `/api/favorites/:id` | 取消收藏（删一条；删不到如实报错，绝不假报成功） | Day 22 | ✅ 已实现并上线 |
 
 **已上线的公网地址**（环境 `magic-hub-d7gt99c7waafb07ad`）：
 
@@ -269,6 +271,110 @@ https://magic-hub-d7gt99c7waafb07ad-1501395198.ap-shanghai.app.tcloudbase.com/ap
 
 ---
 
+### 3.5 PATCH /api/favorites/:id
+
+改一条收藏的备注（Day 22）。**改的是"收藏记录"这条线自己的字段**，不动资料正文。
+
+**编号怎么给**（三种都收，按顺序找）：
+
+1. 路径最后一段数字：`PATCH /api/favorites/12`
+2. 查询参数：`PATCH /api/favorites?id=12`
+3. 请求体里的 `id`
+
+> 实测环境行为（Day 22）：网关**只把路径里纯数字的那一段**当编号传给云函数，
+> `/api/favorites/abc`、`/12abc`、`/-1`、`/999/abc` 这类**到不了函数**，
+> 一律被当成"没给编号"返回 `MISSING_FIELD`。想触发 `BAD_PARAM`，请用 `?id=abc`。
+
+**请求体**
+
+```json
+{ "note": "测试-改" }
+```
+
+| 字段 | 类型 | 必填 | 校验规则 |
+| --- | --- | --- | --- |
+| `note` | string | 是 | 必须是字符串（`undefined` / `null` 才算缺失，**空串合法**）；去掉前后空格后最多 200 个字 |
+
+**成功响应 200**（返回改完之后的整行，前端直接拿 `data.note` 回显，不用自己拼）
+
+```json
+{
+  "ok": true,
+  "data": {
+    "id": 12,
+    "resource_id": 1,
+    "note": "测试-改",
+    "created_at": "2026-10-07T15:10:00.000Z"
+  }
+}
+```
+
+**错误响应**
+
+| code | HTTP | message | 触发条件 |
+| --- | --- | --- | --- |
+| `MISSING_FIELD` | 400 | 缺少要修改的收藏编号 | 三种给法都没给编号（含上面说的非数字路径） |
+| `MISSING_FIELD` | 400 | 缺少要修改的内容：note | 请求体里没有 `note` |
+| `BAD_PARAM` | 400 | 收藏编号必须是正整数 | 传了 0、负数、小数、非数字 |
+| `BAD_PARAM` | 400 | 备注内容必须是文字 | `note` 不是字符串 |
+| `BAD_PARAM` | 400 | 备注最多 200 个字，现在有 N 个字 | 超长（提示里带实际字数） |
+| `NOT_FOUND` | 404 | 这条收藏不存在，可能已经取消收藏了 | 该编号在表里查不到 / 没改到任何行 |
+| `DB_ERROR` | 500 | 保存失败，请稍后重试 | 写入抛异常 |
+
+**这是幂等操作**：改成同一句话，做一次和做三次结果一样，不会多出数据 —— 所以调用方可以放心重试（前端 `api.js` 走的就是带一次重试的 `request()`，与 DELETE 相反）。
+
+**三条必测命令**（Day 22 验收时逐条跑）：
+
+1. 正常改：`PATCH /api/favorites/12` 带 `{"note":"测试-改"}` → `ok:true`，再 GET 回来 `note` 就是新值。
+2. 清空：带 `{"note":""}` → `ok:true`，GET 回来 `note` 是空串（**不是报错**）。
+3. 改不存在的：`PATCH /api/favorites/99999` → `NOT_FOUND`，**绝不返回成功**。
+
+---
+
+### 3.6 DELETE /api/favorites/:id
+
+取消收藏（Day 22）：删掉一条收藏记录。
+
+**编号怎么给**：同 3.5（路径数字 → `?id=` → body）。
+
+**请求体**：无
+
+**成功响应 200**（把被删掉的那一行原样返回，调用方可以拿它做提示）
+
+```json
+{
+  "ok": true,
+  "data": {
+    "id": 12,
+    "resource_id": 1,
+    "note": "",
+    "created_at": "2026-10-07T15:10:00.000Z"
+  }
+}
+```
+
+**错误响应**
+
+| code | HTTP | message | 触发条件 |
+| --- | --- | --- | --- |
+| `MISSING_FIELD` | 400 | 缺少要取消的收藏编号 | 没给编号 |
+| `BAD_PARAM` | 400 | 收藏编号必须是正整数 | 传了 0、负数、小数、非数字 |
+| `NOT_FOUND` | 404 | 这条收藏不存在，可能已经取消收藏了 | 该编号本来就不存在 |
+| `DB_ERROR` | 500 | 删除失败，请稍后重试 | 删了却拿不到结果行（真删没删成，如实报错） |
+
+**两条铁律**
+
+1. **删除不可逆，所以不做重试**。万一第一次其实删成功了、只是回应丢了，再试一次会变成"删一条已经不存在的"，反而让人以为失败了。前端 `api.js` 的 `removeFavorite` 因此用不带重试的 `once()`。
+2. **删不到就如实说没有**，绝不返回 `ok:true`。二次确认那道防线在页面上（点星标先弹确认框），不在这里。
+
+**三条必测命令**（Day 22 验收时逐条跑）：
+
+1. 正常删：`DELETE /api/favorites/12` → `ok:true`；再 GET，这条真的消失了，别的没少。
+2. 删不存在的：`DELETE /api/favorites/99999` → `NOT_FOUND`，不假报成功。
+3. 重复删同一个：第一次成功后第二次 → `NOT_FOUND`。
+
+---
+
 ## 4. 数据模型（Day 16 建表依据）
 
 两张表，符合「一个主对象 + 一堆按时间累积的记录」：
@@ -292,6 +398,7 @@ https://magic-hub-d7gt99c7waafb07ad-1501395198.ap-shanghai.app.tcloudbase.com/ap
 | --- | --- | --- |
 | `id` | serial PK | 自增主键 |
 | `resource_id` | integer not null references resources(id) | 关联哪条资料 |
+| `note` | text not null default `''` | 收藏备注（Day 22 新增）：自己给这条收藏写的一句话，可为空 |
 | `created_at` | timestamptz default now() | 收藏时间 |
 
 唯一约束：`favorites(resource_id)` —— 同一条资料只能被收藏一次。
@@ -310,3 +417,4 @@ https://magic-hub-d7gt99c7waafb07ad-1501395198.ap-shanghai.app.tcloudbase.com/ap
 | 2026-10-08 | POST 落到同一个 `favorites` 云函数（用 `httpMethod` 分流），不新建函数、路由路径不变；请求体支持 base64 编码（`isBase64Encoded` 由网关决定） | #4 |
 | 2026-10-09 | `POST /api/favorites` 公网三条必测通过，标记已上线（补记：上线时 `anon` 角色缺写权限，已用 GRANT 修复，详见 `db/schema.sql` 末尾授权段） | #4 |
 | 2026-10-09 | 新增 1.4：后端拆成入口层 / 数据访问层 / 共享连接层三层，连接与错误工具收进 `_shared/rdb.js`；**接口行为零变化**（10 条公网用例逐条比对一致）；补充「每个 zip 都要带 `_shared`、两个函数都要重新部署」的部署要求 | 全部（仅内部） |
+| 2026-10-11 | 新增 **#5 PATCH**、**#6 DELETE** 两条（改收藏备注、取消收藏），均标记已上线；`favorites` 表加 `note` 字段；记录实测环境行为：网关只把路径里纯数字那段当编号，非数字路径段到不了函数（一律 `MISSING_FIELD`）；明确 PATCH 可重试（幂等）、DELETE 不重试（不可逆） | #5、#6 |

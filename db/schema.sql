@@ -29,6 +29,7 @@ CREATE INDEX IF NOT EXISTS resources_zone_category_idx
 CREATE TABLE IF NOT EXISTS favorites (
   id           SERIAL PRIMARY KEY,
   resource_id  INTEGER NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
+  note         TEXT    NOT NULL DEFAULT '',  -- 收藏备注（Day 22 的 PATCH 改的就是它）
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
   -- 课程不做登录，收藏不区分用户；同一资料只允许收藏一次
   CONSTRAINT favorites_resource_id_key UNIQUE (resource_id)
@@ -62,6 +63,12 @@ CREATE INDEX IF NOT EXISTS favorites_created_at_idx
 GRANT USAGE ON SCHEMA public TO anon;
 GRANT INSERT, UPDATE, DELETE ON TABLE public.favorites TO anon;
 GRANT USAGE, SELECT ON SEQUENCE public.favorites_id_seq TO anon;
+
+-- 收藏备注字段（Day 22 补） --------------------------------------------------
+-- 老库是 Day 16 建的 favorites 表，当时没有 note 列。CREATE TABLE IF NOT EXISTS
+-- 对「已存在的表」不会补列，所以必须单独跑这条 ALTER 才能给老库加上。
+-- ADD COLUMN IF NOT EXISTS 保证重复执行不报错，和本文件其它语句一样可反复跑。
+ALTER TABLE public.favorites ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT '';
 
 -- 核查语句（只读，随时可跑）：
 --   谁对 favorites 有什么权限 —— 谁有 SELECT 谁就是云函数实际使用的身份

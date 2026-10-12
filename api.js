@@ -109,11 +109,49 @@
     });
   }
 
+  /**
+   * 取消收藏（Day 22）：按**收藏记录自己的编号**删一条。
+   *
+   * 注意这里传的是收藏记录的 id（f.id），不是资料 id（resource_id）——
+   * 同一条资料只会被收藏一次，但两条编号不是一回事，混用会删错或删不到。
+   *
+   * 删除不可逆，所以不做重试：万一第一次其实删成功了、只是回应丢了，
+   * 再试一次会变成"删一条已经不存在的"，返回「这条收藏不存在」，反而让人以为失败了。
+   *
+   * @param {number} favoriteId 收藏记录的 id（来自 getFavorites 返回的 f.id）
+   */
+  function removeFavorite(favoriteId) {
+    return once("/api/favorites/" + encodeURIComponent(favoriteId), {
+      method: "DELETE"
+    }, FIRST_TIMEOUT).then(function (r) {
+      return r.body;
+    });
+  }
+
+  /**
+   * 改一条收藏的备注（Day 22）：PATCH /api/favorites/:id，body { note: "..." }
+   *
+   * 改备注是"幂等"的——改成同一句话，做一次和做三次结果一样，不会多出数据，
+   * 所以这里放心用带重试的 request()；不像删除那样怕重复执行。
+   *
+   * @param {number} favoriteId 收藏记录的 id（来自 getFavorites 返回的 f.id）
+   * @param {string} note 新的备注，最多 200 个字
+   */
+  function updateFavoriteNote(favoriteId, note) {
+    return request("/api/favorites/" + encodeURIComponent(favoriteId), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: note })
+    });
+  }
+
   window.MagicAPI = {
     BASE: BASE,
     isLocal: isLocal,
     getResources: getResources,
     getFavorites: getFavorites,
-    addFavorite: addFavorite
+    addFavorite: addFavorite,
+    removeFavorite: removeFavorite,
+    updateFavoriteNote: updateFavoriteNote
   };
 })();

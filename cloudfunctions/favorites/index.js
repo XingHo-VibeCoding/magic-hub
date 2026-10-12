@@ -1,13 +1,21 @@
 /**
- * GET  /api/favorites —— 收藏列表（Day 17）
- * POST /api/favorites —— 新增一条收藏（Day 18：校验 + 防重复 + 中文报错）
+ * GET   /api/favorites     —— 收藏列表（Day 17）
+ * POST  /api/favorites     —— 新增一条收藏（Day 18：校验 + 防重复 + 中文报错）
+ * PATCH  /api/favorites/:id —— 改一条收藏的备注（Day 22：含「改不存在的 id」防呆）
+ * DELETE /api/favorites/:id —— 取消收藏（Day 22：删不到就报「不存在」，绝不假报成功）
  *
  * 对外形状按 api-contract.md 3.3 / 3.4：
  *   成功 { ok:true, data:... }
  *   失败 { ok:false, code:'...', message:'...' }  message 必须是中文
  */
 
-const { queryFavorites, resourceExists, insertFavorite } = require('./db');
+const {
+  queryFavorites,
+  resourceExists,
+  insertFavorite,
+  updateFavoriteNote,
+  deleteFavorite,
+} = require('./db');
 
 function ok(data) {
   return { ok: true, data };
@@ -78,6 +86,54 @@ function parseResourceId(raw) {
   const n = Number(raw);
   if (!Number.isInteger(n) || n <= 0) return { kind: 'BAD' };
   return { kind: 'OK', value: n };
+}
+
+/** 备注长度上限。超过就拒绝，避免有人把整篇文章塞进来撑爆字段。 */
+const NOTE_MAX_LEN = 200;
+
+/**
+ * 校验收藏记录 id（Day 22：PATCH / DELETE 都要用）。
+ * 规则和 resource_id 一致：必须是正整数，布尔值单独挡掉。
+ */
+function parseId(raw) {
+  if (raw === undefined || raw === null) return { kind: 'MISSING' };
+  if (typeof raw === 'string' && raw.trim() === '') return { kind: 'MISSING' };
+  if (typeof raw === 'boolean') return { kind: 'BAD' };
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= 0) return { kind: 'BAD' };
+  return { kind: 'OK', value: n };
+}
+
+/**
+ * 取出「要操作哪一条」的 id。
+ *
+ * 两种写法都支持：
+ *   1. 路径里的 id —— PATCH /api/favorites/12（契约里写的是这种）
+ *   2. 查询参数   —— PATCH /api/favorites?id=12（实测更稳，前端也好拼）
+ * 先试路径，取不到再看查询参数。取不到就返回 null，由上层报「缺少编号」。
+ */
+function readTargetId(event) {
+  const e = event || {};
+
+  // ① 路径：取末尾那一段数字。网关给的可能是 /api/favorites/12 或 /favorites/12
+  const rawPath = e.path || (e.requestContext && e.requestContext.path) || e.url || '';
+  const m = String(rawPath).match(/\/(\d+)\s*$/);
+  if (m) return Number(m[1]);
+
+  // ①b 路径里带了东西但不是数字（如 /api/favorites/abc）：把这段原样交出去，
+  //     由上层判成「编号不合法」，而不是「缺少编号」—— 用户是给了的，只是给错了。
+  const seg = String(rawPath).match(/\/favorites\/([^/?]+)/);
+  if (seg) return seg[1];
+
+  // ② 查询参数
+  const q = readQuery(event);
+  if (q.id !== undefined && q.id !== null && q.id !== '') return q.id;
+
+  // ③ 身体里也允许带（有些调用方喜欢把 id 放 body）
+  const body = readBody(event);
+  if (body && body !== BAD_JSON && body.id !== undefined) return body.id;
+
+  return null;
 }
 
 /** limit 校验：不传默认 20；必须是 1–100 的整数，否则返回 null 表示不合法。 */
@@ -182,6 +238,86 @@ async function handlePost(event) {
   }
 }
 
+/**
+ * PATCH /api/favorites/:id —— 改一条收藏的备注（Day 22）
+ *
+ *  今天的重点是「防呆」：改一条不存在的收藏不能报成功。
+ * 所以顺序是 先认出改哪一条 → 再看改什么 → 最后写；
+ *  写的时候如果数据库说「没有这条」，就返回明确的中文 NOT_FOUND。
+ */
+async function handlePatch(event) {
+  const parsed = readBody(event);
+  if (parsed === BAD_JSON) {
+    return fail('BAD_PARAM', '请求体不是合法的 JSON 格式');
+  }
+  const body = parsed || {};
+
+  // ① 先确定改哪一条
+  const idParsed = parseId(readTargetId(event));
+  if (idParsed.kind === 'MISSING') {
+    return fail('MISSING_FIELD', '缺少要修改的收藏编号');
+  }
+  if (idParsed.kind === 'BAD') {
+    return fail('BAD_PARAM', '收藏编号必须是正整数');
+  }
+  const id = idParsed.value;
+
+  // ② 再看改成什么
+  if (body.note === undefined || body.note === null) {
+    return fail('MISSING_FIELD', '缺少要修改的内容：note');
+  }
+  if (typeof body.note !== 'string') {
+    return fail('BAD_PARAM', '备注内容必须是文字');
+  }
+  const note = body.note.trim();
+  if (note.length > NOTE_MAX_LEN) {
+    return fail(
+      'BAD_PARAM',
+      '备注最多 ' + NOTE_MAX_LEN + ' 个字，现在有 ' + note.length + ' 个字'
+    );
+  }
+
+  // ③ 写入
+  try {
+    const row = await updateFavoriteNote(id, note);
+    if (!row) {
+      return fail('NOT_FOUND', '这条收藏不存在，可能已经取消收藏了');
+    }
+    return ok(row);
+  } catch (e) {
+    console.error('[favorites] 更新备注失败:', e && e.message ? e.message : e);
+    return fail('DB_ERROR', '保存失败，请稍后重试');
+  }
+}
+
+/**
+ * DELETE /api/favorites/:id —— 取消收藏（Day 22）
+ *
+ * 删除不可逆，所以这里只做一件事：确认删的是哪一条，删不到就如实说没有。
+ * 前端在点星标时会先弹确认框（二次确认），那道防线在页面上，不在这里。
+ */
+async function handleDelete(event) {
+  const idParsed = parseId(readTargetId(event));
+  if (idParsed.kind === 'MISSING') {
+    return fail('MISSING_FIELD', '缺少要取消的收藏编号');
+  }
+  if (idParsed.kind === 'BAD') {
+    return fail('BAD_PARAM', '收藏编号必须是正整数');
+  }
+  const id = idParsed.value;
+
+  try {
+    const row = await deleteFavorite(id);
+    if (!row) {
+      return fail('NOT_FOUND', '这条收藏不存在，可能已经取消收藏了');
+    }
+    return ok(row);
+  } catch (e) {
+    console.error('[favorites] 取消收藏失败:', e && e.message ? e.message : e);
+    return fail('DB_ERROR', '取消收藏失败，请稍后重试');
+  }
+}
+
 exports.main = async (event) => {
   // 预热调用：什么都不做，只把实例拉起来就返回
   if (isTimerWarmUp(event)) {
@@ -191,6 +327,8 @@ exports.main = async (event) => {
   const method = readMethod(event);
 
   if (method === 'POST') return handlePost(event);
+  if (method === 'PATCH') return handlePatch(event);
+  if (method === 'DELETE') return handleDelete(event);
   if (method === 'GET' || method === 'HEAD') return handleGet(event);
 
   return fail('BAD_PARAM', '不支持的请求方法：' + method);

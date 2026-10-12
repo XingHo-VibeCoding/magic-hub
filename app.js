@@ -103,6 +103,8 @@
           "</div>" +
           '<h3 class="card-title"></h3>' +
           '<p class="card-summary"></p>' +
+          // 收藏备注（Day 22）：只有真的收藏了、并且写过备注才显示，其余时候整行藏起来
+          '<p class="card-note" hidden></p>' +
           '<div class="card-actions">' +
             '<button class="card-btn btn-fav" type="button" aria-pressed="false">' +
               '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">' +
@@ -110,6 +112,11 @@
                 '<path class="star-fill" d="M12 3.6l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z" fill="currentColor"/>' +
               "</svg>" +
               "<span>收藏</span>" +
+            "</button>" +
+            // 改备注（Day 22）：只在云端且已收藏时出现。本地预览存不住，就不摆这个按钮，
+            // 免得点了没反应像坏了 —— 不做假动作。
+            '<button class="card-btn btn-note" type="button" hidden>' +
+              "<span>备注</span>" +
             "</button>" +
             '<button class="card-btn btn-copy" type="button">' +
               '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">' +
@@ -218,6 +225,12 @@
 
   var DATA = { shumo: [], edian: [] };       // 云端取回的数据缓存：筛选、搜索、资料库共用这一份
   var FAV_IDS = null;                        // 已收藏的资料 id 集合（null = 还没取到）
+  // 资料 id → 收藏记录 id。取消收藏要传的是"收藏记录自己的编号"，
+  // 不是资料编号 —— 两个编号不是一回事，混用会删错，所以单存一份对照表。
+  var FAV_ROW_ID = {};
+  // 资料 id → 这条收藏的备注（Day 22）。刷新后从云端读回来，卡片上要原样显示，
+  // 这样"改了备注"才是看得见的，而不是只存在数据库里。
+  var FAV_NOTES = {};
   var pending = { shumo: null, edian: null };// 同一个区只发一次请求，多处同时要数据也共用同一次
   var redraw = { shumo: null, edian: null, lib: null }; // 收藏状态取到后，用这些函数补画卡片
 
@@ -263,8 +276,16 @@
       .getFavorites({ limit: 100 })
       .then(function (res) {
         FAV_IDS = new Set();
+        FAV_ROW_ID = {};
+        FAV_NOTES = {};
         if (res && res.ok && res.data) {
-          res.data.forEach(function (f) { FAV_IDS.add(String(f.resource_id)); });
+          res.data.forEach(function (f) {
+            FAV_IDS.add(String(f.resource_id));
+            // 收藏记录的编号：取消收藏时要把它传回后端
+            if (f.id != null) FAV_ROW_ID[String(f.resource_id)] = f.id;
+            // 备注：空的也记成空串，这样"改回空"能正确显示成"没有备注"
+            if (f.id != null) FAV_NOTES[String(f.resource_id)] = f.note || "";
+          });
         }
         return FAV_IDS;
       })
@@ -331,11 +352,30 @@
   function setupCardActions(card, cardKey, item) {
     var favBtn = card.querySelector(".btn-fav");
     var copyBtn = card.querySelector(".btn-copy");
+    var noteBtn = card.querySelector(".btn-note");
+    var noteEl = card.querySelector(".card-note");
+
+    // 备注显示：已收藏且真写过备注才露出来，其余时候整行藏住（不占位置、不显空行）
+    function renderNote(on) {
+      if (!noteEl) return;
+      var key = item.id != null ? String(item.id) : "";
+      var text = (key && FAV_NOTES[key]) || "";
+      if (on && text) {
+        noteEl.textContent = "我的备注：" + text;
+        noteEl.hidden = false;
+      } else {
+        noteEl.textContent = "";
+        noteEl.hidden = true;
+      }
+    }
 
     // 外观与状态对齐的单一出口（点一下、重渲染后恢复，都走这里，不会两处写歪）
     function setFaved(on, playPop) {
       favBtn.setAttribute("aria-pressed", on ? "true" : "false");
       favBtn.querySelector("span").textContent = on ? "已收藏" : "收藏";
+      // 备注按钮跟着收藏状态走：没收藏就谈不上有备注（本机预览存不住，干脆不摆）
+      if (noteBtn) noteBtn.hidden = !(on && !useSampleData());
+      renderNote(on);
       if (on && playPop) {
         // 重新触发弹跳动画：先摘掉动画类 → 强制浏览器重排 → 再挂回去
         favBtn.classList.remove("pop");
@@ -369,8 +409,40 @@
 
       // 线上：真的写数据库
       if (pressed) {
-        // 取消收藏要后端 DELETE 接口（还没做）——如实说明，不做假动作
-        showToast("取消收藏功能还在建设中，暂时只支持收藏");
+        // 删除不可逆：先问一句再动手（老师要求的前端二次确认）
+        var name = item.title ? "《" + item.title + "》" : "这条收藏";
+        if (!window.confirm("确定取消收藏 " + name + " 吗？取消后想再收藏，重新点一下星标就行。")) {
+          return;                       // 用户点了「取消」，什么都不做，星标保持原样
+        }
+        var rowId = FAV_ROW_ID[String(item.id)];
+        if (rowId == null) {
+          // 收藏状态没取到（比如刚接上网络）就不猜编号，免得删错一条
+          showToast("还没读到这条的收藏编号，请刷新页面后再试", "error");
+          return;
+        }
+        api()
+          .removeFavorite(rowId)
+          .then(function (res) {
+            if (res && res.ok) {
+              setFaved(false, false);
+              if (FAV_IDS) FAV_IDS.delete(String(item.id));
+              delete FAV_ROW_ID[String(item.id)];
+              showToast("已取消收藏");
+              return;
+            }
+            if (res && res.code === "NOT_FOUND") {
+              // 库里已经没有了（比如别的设备上取消过）：把页面状态对齐，别留个假星标
+              setFaved(false, false);
+              if (FAV_IDS) FAV_IDS.delete(String(item.id));
+              delete FAV_ROW_ID[String(item.id)];
+              showToast("这条收藏已经不在了，状态已更新");
+              return;
+            }
+            showToast((res && res.message) || "取消收藏失败，请稍后再试", "error");
+          })
+          .catch(function () {
+            showToast("网络不通，这次没有取消成功", "error");
+          });
         return;
       }
       if (item.id == null) {
@@ -383,12 +455,17 @@
           if (res && res.ok) {
             setFaved(true, true);
             if (FAV_IDS) FAV_IDS.add(String(item.id));
+            // 记住这条收藏记录的编号，后面取消收藏要用
+            if (res.data && res.data.id != null) FAV_ROW_ID[String(item.id)] = res.data.id;
             showToast("已收藏，刷新后仍然保留");
             return;
           }
           if (res && res.code === "DUPLICATE") {   // 别人/自己已经收藏过：状态对齐即可
             setFaved(true, false);
             if (FAV_IDS) FAV_IDS.add(String(item.id));
+            // 重复说明库里早有一条，但我们不知道它的编号 —— 重新取一次，
+            // 这样后面点星标才能真的取消（不然会提示"读不到编号"）
+            loadFavorites();
             showToast("这条资料已经收藏过了");
             return;
           }
@@ -398,6 +475,47 @@
           showToast("网络不通，这次收藏没有保存", "error");
         });
     });
+
+    // 改备注（Day 22）：弹输入框 → 校验字数 → 真的 PATCH 到云端 → 卡片上立刻显示新备注。
+    // 校验放在前端是为了"少跑一趟"，后端仍然会再查一遍（前端的校验不能当防线）。
+    if (noteBtn) {
+      noteBtn.addEventListener("click", function () {
+        if (useSampleData()) return;      // 本机预览不显示这个按钮；真走到这里也不做假动作
+        var key = item.id != null ? String(item.id) : "";
+        var rowId = key ? FAV_ROW_ID[key] : null;
+        if (!rowId) {
+          // 收藏编号没取到就不猜，避免改到别的收藏上
+          showToast("还没读到这条的收藏编号，请刷新页面后再试", "error");
+          return;
+        }
+        var input = window.prompt(
+          "给这条收藏写一句备注（最多 200 个字；留空就是删掉备注）",
+          FAV_NOTES[key] || ""
+        );
+        if (input === null) return;       // 点了「取消」：什么都不做，也不提示
+        var text = String(input).trim();
+        if (text.length > 200) {
+          showToast("备注最多 200 个字，现在有 " + text.length + " 个字", "error");
+          return;
+        }
+        api()
+          .updateFavoriteNote(rowId, text)
+          .then(function (res) {
+            if (res && res.ok) {
+              // 以后端存下来的为准：它做过 trim，跟手输的可能差前后空格
+              FAV_NOTES[key] =
+                res.data && res.data.note != null ? res.data.note : text;
+              renderNote(true);
+              showToast(FAV_NOTES[key] ? "备注已保存" : "备注已清空");
+              return;
+            }
+            showToast((res && res.message) || "备注没保存成功，请稍后再试", "error");
+          })
+          .catch(function () {
+            showToast("网络不通，这次备注没有保存", "error");
+          });
+      });
+    }
 
     copyBtn.addEventListener("click", function () {
       var text = item.title + "（" + item.category + " · " + item.year + "）— " + window.location.href;
