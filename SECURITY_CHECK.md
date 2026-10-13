@@ -48,7 +48,7 @@ node secret-scan.js
 - `(?:...)` 非捕获组 → 直接 `fatal: invalid regex`，整条规则失效；
 - `\s` 空白简写 → **不报错**，但永远匹配不上，这条规则静默失效（最危险的一种）。
 
-所以规则里的空白一律写成 POSIX 字符类 `[[:space:]]`。对照脚本：`.workbuddy/tmp-day23/scan-positive-check.js`（另起临时仓库、不碰主仓库），六种密钥形态现在全部被抓到、退出码 0。
+所以规则里的空白一律写成 POSIX 字符类 `[[:space:]]`。对照脚本：`tests/scan-positive-check.js`（另起临时仓库、不碰主仓库），六种密钥形态现在全部被抓到、退出码 0。
 
 **必须如实交代的一项**：本机 `.git/config` 里 remote 地址内嵌了 GitHub token（`ghp_` 开头）。它**不在工作树、不进任何提交、也不会被推送出去**，所以不构成泄漏；但任何人拿到这台机器的这个仓库文件都能读出它。本机不能用凭据助手方式（会卡死），这是已知的妥协，非必要不改动。
 
@@ -140,10 +140,10 @@ node secret-scan.js
 
 | 事项 | 状态 | 说明 |
 | --- | --- | --- |
-| **云函数重新打包上线** | 未做 | 本次改了 `_shared/`（新增 `log.js`、`loader.js`）和两个 `db.js`、两个 `index.js`。打包脚本是**白名单式**的，名单里没有这两个新文件——不补上直接上传会让函数找不到模块直接挂掉。两个函数都要重新打包上传。 |
+| **云函数重新打包上线** | 包已就绪，待上传 | 本次改了 `_shared/`（新增 `log.js`、`loader.js`）和两个 `db.js`、两个 `index.js`。旧打包脚本是白名单式的会漏掉新文件，已换成自动读 `_shared` 目录的新脚本；过程中还修掉一个会让线上崩的 bug（四个文件写死了 `../_shared/loader`，打成 zip 后该路径不存在）。两个 zip 已生成并通过解包校验与真加载验证，**上传需本人在控制台操作**。 |
 | **两张截图** | 待办 | ① `node secret-scan.js` 的"0 命中"结果；② 三类错误的中文提示。需本人本机操作。 |
 | **同伴交叉验证** | 未做 | 按本人决定：本次不做（见 WEEK3_ACCEPTANCE.md 第 16 项）。 |
-| **三个取证脚本的去留** | 待定 | 目前在 `.workbuddy/tmp-day23/`（该目录被 Git 忽略），所以别人 clone 仓库后跑不了。要长期保留需移进仓库目录，这件事还没做，等你拍板。 |
+| **取证脚本的去留** | 已解决 | 四个脚本已移进 `tests/` 随仓库保留（原在 `.workbuddy/`，被 Git 忽略，别人 clone 后跑不了）。用法见 `tests/README.md`。 |
 
 ---
 
@@ -159,13 +159,13 @@ node secret-scan.js
 git check-ignore .env            # 期望 0
 git check-ignore .env.example    # 期望 1
 
-# ③④⑤ 三类错误的取证脚本（目前只在本地 .workbuddy/ 下）
-node .workbuddy/tmp-day23/inject-test.js    # 输入错 + 服务端错，26 条
-node .workbuddy/tmp-day23/network-test.js   # 断网/超时/网关挂，6 条
-node .workbuddy/tmp-day23/log-test.js       # 请求日志，6 条
+# ③④⑤ 三类错误的取证脚本（已随仓库保留，详见 tests/README.md）
+node tests/inject-test.js    # 输入错 + 服务端错，26 条
+node tests/network-test.js   # 断网/超时/网关挂，6 条
+node tests/log-test.js       # 请求日志，6 条
 
 # ⑥ 密钥扫描器的阳性对照（另起临时仓库，六种密钥形态必须全被抓到）
-node .workbuddy/tmp-day23/scan-positive-check.js
+node tests/scan-positive-check.js
 ```
 
 五条全部退出码 0 才是今天这一整套通过。
