@@ -17,6 +17,11 @@ const {
   deleteFavorite,
 } = require('./db');
 
+// 请求日志（Day 23 余力加练）：每一次请求留下一行「时间、路径、结果」。
+// 加载方式和 db.js 一样走 loader —— 仓库布局和打成 zip 后的布局都能找到它。
+const { requireShared } = require('../_shared/loader');
+const logRequest = requireShared('log').logRequest;
+
 function ok(data) {
   return { ok: true, data };
 }
@@ -318,12 +323,27 @@ async function handleDelete(event) {
   }
 }
 
+/**
+ * 入口：只做三件事 —— 认出预热、掐表、把结果原样返回（顺手记一行日志）。
+ *
+ * 处理过程抽到下面的 route()：入口保持这么薄，是为了让「计时和记日志」
+ * 不会被某个分支漏掉 —— 走哪条分支都从同一处出去。
+ */
 exports.main = async (event) => {
-  // 预热调用：什么都不做，只把实例拉起来就返回
+  // 预热调用：什么都不做，只把实例拉起来就返回。
+  // 也不写日志：它每分钟都来一次，写了会把真正有用的用户请求日志淹掉。
   if (isTimerWarmUp(event)) {
     return { ok: true, warmed: true };
   }
 
+  const startedAt = Date.now();
+  const result = await route(event);
+  logRequest(event, result, startedAt);
+  return result;
+};
+
+/** 按请求方法分流到对应的处理函数。 */
+async function route(event) {
   const method = readMethod(event);
 
   if (method === 'POST') return handlePost(event);
@@ -332,4 +352,4 @@ exports.main = async (event) => {
   if (method === 'GET' || method === 'HEAD') return handleGet(event);
 
   return fail('BAD_PARAM', '不支持的请求方法：' + method);
-};
+}

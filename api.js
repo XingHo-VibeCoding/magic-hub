@@ -43,7 +43,12 @@
           .json()
           .catch(function () {
             // 网关出错页可能返回 HTML，不是 JSON —— 也翻译成结构化错误，不让调用方崩
-            return { ok: false, code: "BAD_RESPONSE", message: "接口返回的内容不是合法数据" };
+            //
+            // 文案为什么改成下面这句（Day 23 改的）：
+            // 原来写的「接口返回的内容不是合法数据」说的是程序内部出了什么事，
+            // 用户既看不懂，也不知道下一步该怎么办。用户真正需要的是
+            // 「发生了什么 + 我该怎么办」，所以换成人话。
+            return { ok: false, code: "BAD_RESPONSE", message: "接口暂时没回应，请过一会儿再试" };
           })
           .then(function (body) {
             return { status: res.status, body: body };
