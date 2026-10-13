@@ -9,17 +9,26 @@
  */
 
 /**
- * 加载共享模块（Day 23 起改用 loader）。
+ * 拿到共享模块加载器（Day 23 补）。
  *
- * 为什么要绕一层 loader：仓库布局是 ../_shared/rdb，打成 zip 后变成 ./_shared/rdb
- * （CloudBase 每个云函数各打一个 zip，_shared 会被复制进去、和入口同级），两种路径都在用。
- * "试哪个路径"这件事统一收在 _shared/loader.js 里 —— 它住在 _shared 内部，
- * 对同伴永远是同级的 ./xxx，不受打包影响。
+ * 坑：仓库里 loader 在上一级（../_shared/loader），打成 zip 后 _shared 和本文件同级
+ * （./_shared/loader）——CloudBase 每个函数各打一个 zip，_shared 会被复制进去。
+ * 写死任何一个，另一种布局下就是 MODULE_NOT_FOUND，函数启动直接崩。
  *
- * 好处：以后再加共享模块跟着写一句就行；否则每加一个，就要在每个入口重写一遍「两个路径各试一次」，
- * Day 19 已经为「同一份东西抄两遍」吃过亏（一处改了、一处没改，结果只有一半接口能用）。
+ * 所以两个路径各试一次，只吞「找不到模块」这一种错，其它错误照常往上抛，免得真出错被藏起来。
+ * loader 自己再往下找 rdb / log 时永远是同级 ./xxx，不受打包影响。
  */
-const { requireShared } = require('../_shared/loader');
+function requireLoader() {
+  for (const p of ['../_shared/loader', './_shared/loader']) {
+    try {
+      return require(p);
+    } catch (e) {
+      if (!e || e.code !== 'MODULE_NOT_FOUND') throw e;
+    }
+  }
+  throw new Error('找不到共享模块 _shared/loader.js');
+}
+const { requireShared } = requireLoader();
 
 const shared = requireShared('rdb');
 const getRdb = shared.getRdb;

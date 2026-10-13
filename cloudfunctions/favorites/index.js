@@ -18,8 +18,20 @@ const {
 } = require('./db');
 
 // 请求日志（Day 23 余力加练）：每一次请求留下一行「时间、路径、结果」。
-// 加载方式和 db.js 一样走 loader —— 仓库布局和打成 zip 后的布局都能找到它。
-const { requireShared } = require('../_shared/loader');
+// 拿到 loader 必须「两个路径各试一次」：仓库里它在上一级（../_shared/loader），
+// 打成 zip 后 _shared 与本文件同级（./_shared/loader）——写死任何一个，另一种布局下
+// 就是 MODULE_NOT_FOUND，云函数启动直接崩（Day 23 踩过一次）。
+function requireLoader() {
+  for (const p of ['../_shared/loader', './_shared/loader']) {
+    try {
+      return require(p);
+    } catch (e) {
+      if (!e || e.code !== 'MODULE_NOT_FOUND') throw e;
+    }
+  }
+  throw new Error('找不到共享模块 _shared/loader.js');
+}
+const { requireShared } = requireLoader();
 const logRequest = requireShared('log').logRequest;
 
 function ok(data) {
