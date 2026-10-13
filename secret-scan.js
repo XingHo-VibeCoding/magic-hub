@@ -100,18 +100,31 @@ function scanWorktree() {
 // ---------------------------------------------------------------------------
 // 2. Git 历史：提交过就算泄漏，所以必须查全部历史
 // ---------------------------------------------------------------------------
-// 这里用带最小长度的模式，避免把 CSS 类名（.sk-tag）当成 sk- 密钥：
-// 真正的 sk- 密钥后面跟 20 位以上字符，ghp_ 后面跟 30 位以上。
+// 两个约束，都是踩过坑才加的：
+//
+// 1) 模式必须「长得像真值」，不能只匹配关键字。
+//    踩过的坑：只写 postgres:// 会把 SECURITY_CHECK.md 里那句检查项说明
+//    （「提交历史：`postgres://` 连接串」）当成命中——它只是个名字，后面没有值。
+//    所以连接串要求带 user:pass@ 形态，口令/密钥要求等号后面跟 8 位以上实际字符。
+//
+// 2) sk- / ghp_ 带最小长度，避免把 CSS 类名（.sk-tag / .sk-line）当成密钥。
+//
+// 3) git -S 用的是 POSIX 正则，有两样东西不能写（都实测踩过）：
+//    - `(?:...)` 非捕获组 → 直接报 fatal: invalid regex，整条规则失效；
+//    - `\s` 空白简写     → 不报错，但匹配不上，等于这条规则永远 0 命中（静默失效，最危险）。
+//    所以下面一律用 POSIX 字符类 [[:space:]]，需要分组就用 (a|b)。
 const HISTORY_RULES = [
-  ["数据库连接串", "postgres://"],
-  // 带最小长度，是为了不把 CSS 类名（.sk-tag）当成 sk- 密钥：
-  // 真正的 sk- 密钥后面跟 20 位以上字符，ghp_ 后面跟 30 位以上。
+  ["数据库连接串", "(postgres|postgresql)://[^ '\"]+:[^ @'\"]+@"],
   ["OpenAI 风格密钥", "sk-[A-Za-z0-9]{20,}"],
   ["GitHub 令牌", "gh[pousr]_[A-Za-z0-9]{30,}"],
-  ["口令赋值", "password="],
-  ["密钥赋值", "secret="],
-  ["私钥", "PRIVATE KEY-----"]
+  ["口令赋值", "password[[:space:]]*=[[:space:]]*[\"']?[A-Za-z0-9_\\-]{8,}"],
+  ["密钥赋值", "secret[[:space:]]*=[[:space:]]*[\"']?[A-Za-z0-9_\\-]{8,}"],
+  ["私钥", "BEGIN [A-Z ]*PRIVATE KEY-----"]
 ];
+
+// 历史检索要排除自己：本文件的规则表里就写着 postgres://、password= 这些字符串，
+// 不排除的话每次都会"自命中"，把真正的警报淹没掉（工作树扫描早就跳过了自己，这里补上）。
+const HISTORY_PATHSPEC = ["--", ".", ":(exclude)" + SELF];
 
 function git(args) {
   const r = spawnSync("git", args, { encoding: "utf8", maxBuffer: 1e8 });
@@ -125,7 +138,7 @@ function scanHistory() {
   const results = [];
   for (const [name, needle] of HISTORY_RULES) {
     // -S 找的是「这个字符串在哪个提交里被加进来或删掉过」；--pickaxe-regex 让它按正则找
-    const r = git(["log", "--all", "--oneline", "--pickaxe-regex", "-S", needle]);
+    const r = git(["log", "--all", "--oneline", "--pickaxe-regex", "-S", needle].concat(HISTORY_PATHSPEC));
     const lines = r.out ? r.out.split(/\r?\n/).filter(Boolean) : [];
     results.push({ name: name, needle: needle, hits: lines });
   }
