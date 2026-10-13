@@ -63,12 +63,19 @@ const MENTION_RULE = /\b(AI_API_KEY|API_KEY|SECRET_KEY|ACCESS_KEY|CLIENT_SECRET|
 
 const SELF = "secret-scan.js";   // 跳过自己：规则表里本来就写着这些关键字
 
+// 阳性对照样本：tests/scan-positive-check.js 里**故意**写着假密钥（sk-… / postgres://…），
+// 它的存在意义就是被本脚本抓到 —— 用来证明"报 0 命中"不是因为规则失效。
+// 它不是泄漏，所以跳过；不跳过的话每次都报 6 处假警报，真警报会被淹没。
+// （和"跳过自身"是同一个道理：自己造的样本，不算泄漏。）
+const SAMPLE = path.join("tests", "scan-positive-check.js");
+
 function collectFiles(dir, out) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (SKIP_DIRS.has(e.name)) continue;
     const fp = path.join(dir, e.name);
     if (e.isDirectory()) collectFiles(fp, out);
     else if (e.name === SELF && dir === ".") continue;
+    else if (fp === SAMPLE) continue;
     else if (SCAN_EXT.test(e.name) || EXTRA_NAMES.has(e.name)) out.push(fp);
   }
   return out;
@@ -124,7 +131,8 @@ const HISTORY_RULES = [
 
 // 历史检索要排除自己：本文件的规则表里就写着 postgres://、password= 这些字符串，
 // 不排除的话每次都会"自命中"，把真正的警报淹没掉（工作树扫描早就跳过了自己，这里补上）。
-const HISTORY_PATHSPEC = ["--", ".", ":(exclude)" + SELF];
+// 同理排除阳性对照样本 tests/scan-positive-check.js —— 它故意装着假密钥，提交后也会自命中。
+const HISTORY_PATHSPEC = ["--", ".", ":(exclude)" + SELF, ":(exclude)" + SAMPLE];
 
 function git(args) {
   const r = spawnSync("git", args, { encoding: "utf8", maxBuffer: 1e8 });
