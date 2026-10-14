@@ -557,6 +557,19 @@ body {
   45%  { transform: scale(1.4); }
   100% { transform: scale(1); }
 }
+/* Day 24：请求进行中（此时文字已由脚本改成「处理中」）
+   补两个静态信号：鼠标变「忙」、边框改虚线表示"还没落定"。
+   刻意不用 opacity 把整体压暗 —— 那会把文字的对比度一起拖下来（Day 9 改过的坑）。 */
+.btn-fav[aria-busy="true"] {
+  cursor: progress;
+  border-style: dashed;
+}
+/* 进行中不接受点击，悬停就不该再"变色邀点"，保持当前状态不变 */
+.btn-fav[aria-busy="true"]:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
 
 /* ==========================================================================
    四种页面状态（加载 / 成功 / 空 / 错误）

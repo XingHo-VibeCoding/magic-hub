@@ -369,10 +369,35 @@
       }
     }
 
+    // Day 24：连点保护。这个标记是「这张卡片自己的」，不是全局的 ——
+    // 收藏 A 卡不该挡住收藏 B 卡，所以放在每张卡片各自的闭包里（卡片重渲染就跟着重建）。
+    var favPending = false;
+
+    // 按钮文字的单一出口：**处理中**优先于收藏状态。
+    // 有三处会改文字（点收藏的瞬间、请求回来、连点保护），分开写必有一处写歪，所以收成一处。
+    function renderFavLabel() {
+      var span = favBtn.querySelector("span");
+      if (favPending) {
+        span.textContent = "处理中";
+        return;
+      }
+      span.textContent = favBtn.getAttribute("aria-pressed") === "true" ? "已收藏" : "收藏";
+    }
+
+    // 请求进行中：打 aria-busy 标记（样式用）、文字改成「处理中」，后续点击一律忽略。
+    // 不用 disabled 属性：disabled 的按钮不派发 click、还会丢焦点，
+    // 而产品里「点了没反应」比「按钮变灰」更需要解释，所以自己记标记 + 提前 return。
+    function setFavBusy(on) {
+      favPending = on;
+      if (on) favBtn.setAttribute("aria-busy", "true");
+      else favBtn.removeAttribute("aria-busy");
+      renderFavLabel();
+    }
+
     // 外观与状态对齐的单一出口（点一下、重渲染后恢复，都走这里，不会两处写歪）
     function setFaved(on, playPop) {
       favBtn.setAttribute("aria-pressed", on ? "true" : "false");
-      favBtn.querySelector("span").textContent = on ? "已收藏" : "收藏";
+      renderFavLabel();
       // 备注按钮跟着收藏状态走：没收藏就谈不上有备注（本机预览存不住，干脆不摆）
       if (noteBtn) noteBtn.hidden = !(on && !useSampleData());
       renderNote(on);
@@ -391,6 +416,12 @@
     if (faved) setFaved(true, false);   // 只恢复外观，不弹提示、不弹跳
 
     favBtn.addEventListener("click", function () {
+      // Day 24：请求还没回来之前，后续点击直接忽略。
+      // 这段以前没有锁：第一次请求没返回时 aria-pressed 还是 false，
+      // 第二次点击就又走了一遍「新增收藏」—— 多发一次请求，还弹出「这条资料已经收藏过了」，
+      // 用户明明只收藏了一次，却像被人抢先了一样。
+      if (favPending) return;
+
       var pressed = favBtn.getAttribute("aria-pressed") === "true";
 
       // 本地预览（示例数据）：沿用内存收藏，刷新清空 —— 如实反馈，不假装保存
@@ -420,6 +451,8 @@
           showToast("还没读到这条的收藏编号，请刷新页面后再试", "error");
           return;
         }
+        // 取消也是连点两次就会发两次 DELETE，第二次必然 NOT_FOUND，所以同样加锁
+        setFavBusy(true);
         api()
           .removeFavorite(rowId)
           .then(function (res) {
@@ -442,6 +475,10 @@
           })
           .catch(function () {
             showToast("网络不通，这次没有取消成功", "error");
+          })
+          .then(function () {
+            // 无论成功失败都要解锁：漏了解的话，一次失败之后这颗星就再也点不动了
+            setFavBusy(false);
           });
         return;
       }
@@ -449,11 +486,16 @@
         showToast("这条内容还没有编号，暂时收藏不了", "error");
         return;
       }
+      // Day 24：乐观更新 —— 星标立刻变实心，不等服务器回话。
+      // 敢先改外观，是因为下面每个失败分支都会把它改回去，不会留下假星标；
+      // 于是第二次点击时状态已经是「已收藏」，加上开头的锁，连点就有了双保险。
+      setFavBusy(true);
+      setFaved(true, true);
       api()
         .addFavorite(item.id)
         .then(function (res) {
           if (res && res.ok) {
-            setFaved(true, true);
+            // 外观刚才已经更新过了，这里只补数据：不再调 setFaved，免得弹跳动画播两遍
             if (FAV_IDS) FAV_IDS.add(String(item.id));
             // 记住这条收藏记录的编号，后面取消收藏要用
             if (res.data && res.data.id != null) FAV_ROW_ID[String(item.id)] = res.data.id;
@@ -469,10 +511,17 @@
             showToast("这条资料已经收藏过了");
             return;
           }
+          // 服务器明确拒绝了：上面那次乐观更新得撤回，不能留个假星标
+          setFaved(false, false);
           showToast((res && res.message) || "收藏失败，请稍后再试", "error");
         })
         .catch(function () {
+          setFaved(false, false);   // 同上：没存住就把星标收回来
           showToast("网络不通，这次收藏没有保存", "error");
+        })
+        .then(function () {
+          // 成功失败都要解锁：漏了的话，一次失败之后这颗星就再也点不动了
+          setFavBusy(false);
         });
     });
 
