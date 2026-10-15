@@ -1,0 +1,205 @@
+{
+  "exported_at": "2026-10-15T13:29:57.635Z",
+  "source": "https://magic-hub-d7gt99c7waafb07ad-1501395198.ap-shanghai.app.tcloudbase.com",
+  "note": "仅业务数据，不含密钥；favorites 只含该表真实字段（不含接口 join 的 title/zone）",
+  "counts": {
+    "resources": 16,
+    "favorites": 5
+  },
+  "tables": {
+    "resources": [
+      {
+        "id": 2,
+        "zone": "shumo",
+        "category": "优秀论文",
+        "year": 2024,
+        "title": "国一论文精读 · 板凳龙运动轨迹",
+        "summary": "螺旋线与碰撞检测的完整建模过程，附摘要写作结构批注。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 3,
+        "zone": "shumo",
+        "category": "评分标准",
+        "year": 2025,
+        "title": "CUMCM 评审要点速览",
+        "summary": "假设合理性、模型创新性、结果检验三大维度，评委视角逐条解读。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 4,
+        "zone": "shumo",
+        "category": "知识讲解",
+        "year": 2025,
+        "title": "三天入门常用模型",
+        "summary": "线性规划 / 层次分析 / 回归预测的最小可用知识包与代码模板。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 5,
+        "zone": "shumo",
+        "category": "真题",
+        "year": 2024,
+        "title": "研究生数学建模 · F 题",
+        "summary": "风电场功率预测：数据清洗流程与时序特征工程实战记录。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 6,
+        "zone": "shumo",
+        "category": "优秀论文",
+        "year": 2023,
+        "title": "美赛 MCM · O 奖论文",
+        "summary": "共享单车调度问题：从问题重述到敏感性分析的全链条范文。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 7,
+        "zone": "shumo",
+        "category": "AI skill",
+        "year": 2025,
+        "title": "线性规划求解 skill 模板",
+        "summary": "输入题目自动拆解约束条件与目标函数，附 Python 求解代码框架。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 8,
+        "zone": "shumo",
+        "category": "评委点评",
+        "year": 2024,
+        "title": "C 题获奖队伍评委点评实录",
+        "summary": "评委逐队点评假设、模型与论文表达，标注高频失分点。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 9,
+        "zone": "edian",
+        "category": "国奖作品",
+        "year": 2024,
+        "title": "H 题 · 自动行驶小车",
+        "summary": "循迹 + 避障方案全解析：主控选型、PID 调参实录与实地测试数据。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 10,
+        "zone": "edian",
+        "category": "器件资料",
+        "year": 2025,
+        "title": "常用元器件速查手册",
+        "summary": "电阻电容 / 运放 / 电源芯片选型要点与典型电路图合集。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 11,
+        "zone": "edian",
+        "category": "软件资源",
+        "year": 2025,
+        "title": "嵌入式开发环境搭建指南",
+        "summary": "Keil / STM32CubeMX / 烧录工具的安装配置与常见报错排查。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 12,
+        "zone": "edian",
+        "category": "国奖作品",
+        "year": 2023,
+        "title": "E 题 · 运动目标控制",
+        "summary": "视觉识别 + 云台控制方案，附激光笔瞄准的标定细节。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 13,
+        "zone": "edian",
+        "category": "器件资料",
+        "year": 2024,
+        "title": "电机驱动模块对比实测",
+        "summary": "TB6612 / L298N / DRV8833 效率、发热与接线复杂度横评。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 14,
+        "zone": "edian",
+        "category": "软件资源",
+        "year": 2023,
+        "title": "电路仿真工具入门",
+        "summary": "Multisim 与 LTspice 基础操作，赛前验证电路不再靠玄学。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 15,
+        "zone": "edian",
+        "category": "AI skill",
+        "year": 2025,
+        "title": "电路方案速查 skill 模板",
+        "summary": "描述功能需求即可检索参考电路、器件选型与常见坑。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 16,
+        "zone": "edian",
+        "category": "评委点评",
+        "year": 2024,
+        "title": "H 题国赛评审现场点评",
+        "summary": "小车类赛题评审要点：方案合理性、实测数据与现场答辩表现。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      },
+      {
+        "id": 1,
+        "zone": "shumo",
+        "category": "真题",
+        "year": 2025,
+        "title": "全国大学生数学建模竞赛 · C 题",
+        "summary": "农作物种植策略优化：多目标线性规划 + 灵敏度分析思路拆解。",
+        "link": "",
+        "created_at": "2026-10-08T12:46:48.093957+08:00"
+      }
+    ],
+    "favorites": [
+      {
+        "id": 8,
+        "resource_id": 4,
+        "note": "测试-改",
+        "created_at": "2026-10-11T11:35:10.391033+08:00"
+      },
+      {
+        "id": 7,
+        "resource_id": 6,
+        "note": "",
+        "created_at": "2026-10-10T21:56:21.191544+08:00"
+      },
+      {
+        "id": 6,
+        "resource_id": 3,
+        "note": "",
+        "created_at": "2026-10-10T21:56:10.273636+08:00"
+      },
+      {
+        "id": 5,
+        "resource_id": 2,
+        "note": "",
+        "created_at": "2026-10-10T20:59:01.743461+08:00"
+      },
+      {
+        "id": 1,
+        "resource_id": 1,
+        "note": "测试-改",
+        "created_at": "2026-10-09T14:50:29.926442+08:00"
+      }
+    ]
+  }
+}
